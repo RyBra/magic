@@ -442,6 +442,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Инициализируем интерактивные элементы магии
         initializeInteractiveMagic();
+        
+        // Инициализируем многопользовательскую систему
+        initializeMultiplayerMagic();
     }
     
     // Глобальные переменные для системы магии
@@ -450,6 +453,39 @@ document.addEventListener('DOMContentLoaded', function() {
     let magicExperience = 0;
     let magicStreak = 0;
     let lastMagicTime = 0;
+    
+    // МНОГОПОЛЬЗОВАТЕЛЬСКАЯ СИСТЕМА МАГИИ
+    let playerId = 'player_' + Math.random().toString(36).substr(2, 9);
+    let playerName = 'Маг_' + Math.floor(Math.random() * 1000);
+    let connectedPlayers = new Map();
+    let magicNetwork = {
+        isConnected: false,
+        serverUrl: 'wss://echo.websocket.org', // Публичный WebSocket сервер для демо
+        socket: null,
+        reconnectAttempts: 0,
+        maxReconnectAttempts: 5
+    };
+    
+    // Симуляция сетевого соединения (для демо)
+    let networkSimulation = {
+        enabled: true,
+        latency: 100, // мс
+        packetLoss: 0.05, // 5% потери пакетов
+        players: new Map()
+    };
+    
+    // МОБИЛЬНАЯ ОПТИМИЗАЦИЯ
+    let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    let isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    let mobileUI = {
+        enabled: isMobile || isTouchDevice,
+        magicButtons: [],
+        gestureMagic: {
+            enabled: true,
+            lastGesture: null,
+            gestureStartTime: 0
+        }
+    };
     
     // Система весовых коэффициентов для эффектов
     const magicEffects = {
@@ -517,6 +553,66 @@ document.addEventListener('DOMContentLoaded', function() {
             { effect: () => createWindTornado(), weight: 7, name: "Ветряной торнадо" },
             { effect: () => createIceAge(), weight: 7, name: "Ледниковый период" },
             { effect: () => createThunderStorm(), weight: 7, name: "Грозовой шторм" }
+        ],
+        
+        // Космические эффекты (вес 6)
+        cosmic: [
+            { effect: () => createBlackHole(), weight: 6, name: "Черная дыра" },
+            { effect: () => createNebula(), weight: 6, name: "Туманность" },
+            { effect: () => createSupernova(), weight: 6, name: "Сверхновая" },
+            { effect: () => createSolarFlare(), weight: 6, name: "Солнечная вспышка" },
+            { effect: () => createAsteroidBelt(), weight: 6, name: "Пояс астероидов" },
+            { effect: () => createWormhole(), weight: 6, name: "Кротовая нора" }
+        ],
+        
+        // Временные эффекты (вес 5)
+        temporal: [
+            { effect: () => createTimeStop(), weight: 5, name: "Остановка времени" },
+            { effect: () => createTimeAcceleration(), weight: 5, name: "Ускорение времени" },
+            { effect: () => createTimeReversal(), weight: 5, name: "Обращение времени" },
+            { effect: () => createTimeLoop(), weight: 5, name: "Временная петля" },
+            { effect: () => createTimeFracture(), weight: 5, name: "Разлом времени" },
+            { effect: () => createTemporalStorm(), weight: 5, name: "Временной шторм" }
+        ],
+        
+        // Психические эффекты (вес 4)
+        psychic: [
+            { effect: () => createMindControl(), weight: 4, name: "Контроль разума" },
+            { effect: () => createTelepathy(), weight: 4, name: "Телепатия" },
+            { effect: () => createIllusion(), weight: 4, name: "Иллюзия" },
+            { effect: () => createMemoryWipe(), weight: 4, name: "Стирание памяти" },
+            { effect: () => createPsychicStorm(), weight: 4, name: "Психический шторм" },
+            { effect: () => createDreamRealm(), weight: 4, name: "Царство снов" }
+        ],
+        
+        // Природные эффекты (вес 8)
+        nature: [
+            { effect: () => createFlowerBloom(), weight: 8, name: "Цветение" },
+            { effect: () => createTreeGrowth(), weight: 8, name: "Рост деревьев" },
+            { effect: () => createAnimalSummon(), weight: 8, name: "Призыв животных" },
+            { effect: () => createWeatherControl(), weight: 8, name: "Контроль погоды" },
+            { effect: () => createSeasonChange(), weight: 8, name: "Смена сезонов" },
+            { effect: () => createNatureSpirits(), weight: 8, name: "Духи природы" }
+        ],
+        
+        // Хаотические эффекты (вес 3)
+        chaos: [
+            { effect: () => createRealityGlitch(), weight: 3, name: "Глитч реальности" },
+            { effect: () => createDimensionRift(), weight: 3, name: "Разрыв измерений" },
+            { effect: () => createQuantumFoam(), weight: 3, name: "Квантовая пена" },
+            { effect: () => createProbabilityStorm(), weight: 3, name: "Шторм вероятностей" },
+            { effect: () => createChaosVortex(), weight: 3, name: "Вихрь хаоса" },
+            { effect: () => createRealityBreak(), weight: 3, name: "Разлом реальности" }
+        ],
+        
+        // Ультимативные эффекты (вес 0.5)
+        ultimate: [
+            { effect: () => createUniverseCreation(), weight: 0.5, name: "Создание вселенной" },
+            { effect: () => createGodMode(), weight: 0.5, name: "Режим бога" },
+            { effect: () => createInfinitePower(), weight: 0.5, name: "Бесконечная сила" },
+            { effect: () => createOmnipotence(), weight: 0.5, name: "Всемогущество" },
+            { effect: () => createAbsoluteReality(), weight: 0.5, name: "Абсолютная реальность" },
+            { effect: () => createMagicSingularity(), weight: 0.5, name: "Магическая сингулярность" }
         ]
     };
     
@@ -546,6 +642,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Показываем информацию об эффекте
         showMagicInfo(selectedEffect.name);
+        
+        // Отправляем магию другим игрокам
+        sendMagicToPlayers(selectedEffect);
         
         // Добавляем эффект в историю для комбинаций
         magicHistory.push(selectedEffect);
@@ -729,15 +828,38 @@ document.addEventListener('DOMContentLoaded', function() {
     // Магическая реакция на клавиши
     function createMagicKeyboardReaction() {
         const magicKeys = {
+            // Элементальные
             'f': () => createFireStorm(),
             'w': () => createWaterWhirlpool(),
             'e': () => createEarthquake(),
             'a': () => createWindTornado(),
             'i': () => createIceAge(),
             't': () => createThunderStorm(),
+            
+            // Космические
+            'b': () => createBlackHole(),
+            'n': () => createNebula(),
+            's': () => createSupernova(),
+            'o': () => createSolarFlare(),
+            'k': () => createAsteroidBelt(),
+            'h': () => createWormhole(),
+            
+            // Временные
+            '1': () => createTimeStop(),
+            '2': () => createTimeAcceleration(),
+            '3': () => createTimeReversal(),
+            '4': () => createTimeLoop(),
+            '5': () => createTimeFracture(),
+            '6': () => createTemporalStorm(),
+            
+            // Классические
             'r': () => createRainbow(),
             'l': () => createLightning(),
-            'space': () => performMagic()
+            'space': () => performMagic(),
+            
+            // РЕЖИМ ХАОСА!
+            'c': () => createChaosMode(),
+            'x': () => createUltimateChaosMode()
         };
         
         document.addEventListener('keydown', (e) => {
@@ -747,6 +869,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 e.preventDefault();
                 magicKeys[key]();
                 showMagicInfo(`Быстрое заклинание: ${key.toUpperCase()}`);
+                
+                // Отправляем магию другим игрокам для клавиатурных заклинаний
+                if (key !== 'c' && key !== 'x' && key !== 'space') {
+                    const effectName = getEffectNameByKey(key);
+                    if (effectName) {
+                        sendMagicToPlayers({ name: effectName });
+                    }
+                }
                 
                 // Создаем визуальную обратную связь
                 createKeyPressEffect();
@@ -803,6 +933,34 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Функция для получения названия эффекта по клавише
+    function getEffectNameByKey(key) {
+        const keyToEffectMap = {
+            'f': 'Огненный шторм',
+            'w': 'Водоворот',
+            'e': 'Землетрясение',
+            'a': 'Ветряной торнадо',
+            'i': 'Ледниковый период',
+            't': 'Грозовой шторм',
+            'b': 'Черная дыра',
+            'n': 'Туманность',
+            's': 'Сверхновая',
+            'o': 'Солнечная вспышка',
+            'k': 'Пояс астероидов',
+            'h': 'Кротовая нора',
+            '1': 'Остановка времени',
+            '2': 'Ускорение времени',
+            '3': 'Обращение времени',
+            '4': 'Временная петля',
+            '5': 'Разлом времени',
+            '6': 'Временной шторм',
+            'r': 'Радуга',
+            'l': 'Молния'
+        };
+        
+        return keyToEffectMap[key] || null;
+    }
+    
     // Инициализация интерактивных элементов
     function initializeInteractiveMagic() {
         createMagicCursorTrail();
@@ -836,15 +994,37 @@ document.addEventListener('DOMContentLoaded', function() {
         
         tipsDiv.innerHTML = `
             <div style="color: #00FFFF; font-weight: bold; margin-bottom: 10px;">🎮 УПРАВЛЕНИЕ МАГИЕЙ</div>
+            <div style="color: #FF4500; font-weight: bold;">🔥 ЭЛЕМЕНТАЛЬНЫЕ:</div>
             <div>• F - Огненный шторм</div>
             <div>• W - Водоворот</div>
             <div>• E - Землетрясение</div>
             <div>• A - Ветряной торнадо</div>
             <div>• I - Ледниковый период</div>
             <div>• T - Грозовой шторм</div>
+            <div style="color: #8A2BE2; font-weight: bold;">🌌 КОСМИЧЕСКИЕ:</div>
+            <div>• B - Черная дыра</div>
+            <div>• N - Туманность</div>
+            <div>• S - Сверхновая</div>
+            <div>• O - Солнечная вспышка</div>
+            <div>• K - Пояс астероидов</div>
+            <div>• H - Кротовая нора</div>
+            <div style="color: #00FFFF; font-weight: bold;">⏰ ВРЕМЕННЫЕ:</div>
+            <div>• 1 - Остановка времени</div>
+            <div>• 2 - Ускорение времени</div>
+            <div>• 3 - Обращение времени</div>
+            <div>• 4 - Временная петля</div>
+            <div>• 5 - Разлом времени</div>
+            <div>• 6 - Временной шторм</div>
+            <div style="color: #FFD700; font-weight: bold;">✨ КЛАССИЧЕСКИЕ:</div>
             <div>• R - Радуга</div>
             <div>• L - Молния</div>
             <div>• ПРОБЕЛ - Случайная магия</div>
+            <div style="color: #FF0000; font-weight: bold;">💀 РЕЖИМЫ ХАОСА:</div>
+            <div>• C - Режим хаоса</div>
+            <div>• X - Ультимативный хаос</div>
+            <div style="color: #8A2BE2; font-weight: bold;">🔍 ПОИСК И ПОРТАЛЫ:</div>
+            <div>• P - Пробить дыру в реальности</div>
+            <div>• Клик по точке на радаре - портал к магу</div>
             <div style="margin-top: 10px; color: #FFD700;">
                 Двигайте мышью для магического следа!
             </div>
@@ -1674,6 +1854,2972 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
             if (greatElementContainer.parentNode) {
                 greatElementContainer.parentNode.removeChild(greatElementContainer);
+            }
+        }, 8000);
+    }
+    
+    // НОВЫЕ КАТЕГОРИИ МАГИИ - КОСМИЧЕСКИЕ ЭФФЕКТЫ
+    
+    // Черная дыра
+    function createBlackHole() {
+        const blackHoleContainer = document.createElement('div');
+        blackHoleContainer.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            pointer-events: none;
+            z-index: 9998;
+            animation: blackHoleAnimation 8s ease-out forwards;
+        `;
+        
+        // Создаем черную дыру
+        const blackHole = document.createElement('div');
+        blackHole.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, #000000, #1a1a1a, #000000);
+            border-radius: 50%;
+            animation: blackHoleCore 2s ease-in-out infinite;
+            box-shadow: 0 0 50px #000000, inset 0 0 30px #1a1a1a;
+        `;
+        
+        blackHoleContainer.appendChild(blackHole);
+        
+        // Создаем аккреционный диск
+        for (let i = 0; i < 50; i++) {
+            const particle = document.createElement('div');
+            particle.style.cssText = `
+                position: absolute;
+                width: ${Math.random() * 4 + 2}px;
+                height: ${Math.random() * 4 + 2}px;
+                background: radial-gradient(circle, #FF4500, #FF0000, #8B0000);
+                border-radius: 50%;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                animation: accretionDisk ${Math.random() * 3 + 2}s linear infinite;
+                animation-delay: ${Math.random() * 2}s;
+                box-shadow: 0 0 10px #FF4500;
+            `;
+            
+            particle.style.setProperty('--orbit-radius', (60 + Math.random() * 80) + 'px');
+            particle.style.setProperty('--orbit-angle', (Math.random() * 360) + 'deg');
+            
+            blackHoleContainer.appendChild(particle);
+        }
+        
+        // Добавляем CSS анимации
+        if (!document.getElementById('blackHoleAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'blackHoleAnimation';
+            style.textContent = `
+                @keyframes blackHoleAnimation {
+                    0% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) scale(0) rotate(0deg);
+                    }
+                    20% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1) rotate(90deg);
+                    }
+                    80% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1.5) rotate(270deg);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) scale(2) rotate(360deg);
+                    }
+                }
+                @keyframes blackHoleCore {
+                    0%, 100% { 
+                        transform: translate(-50%, -50%) scale(1);
+                    }
+                    50% { 
+                        transform: translate(-50%, -50%) scale(1.1);
+                    }
+                }
+                @keyframes accretionDisk {
+                    0% { 
+                        transform: translate(-50%, -50%) rotate(var(--orbit-angle)) translateX(var(--orbit-radius)) rotate(calc(-1 * var(--orbit-angle)));
+                        opacity: 1;
+                    }
+                    100% { 
+                        transform: translate(-50%, -50%) rotate(calc(var(--orbit-angle) + 360deg)) translateX(var(--orbit-radius)) rotate(calc(-1 * var(--orbit-angle) - 360deg));
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(blackHoleContainer);
+        
+        setTimeout(() => {
+            if (blackHoleContainer.parentNode) {
+                blackHoleContainer.parentNode.removeChild(blackHoleContainer);
+            }
+        }, 8000);
+    }
+    
+    // Туманность
+    function createNebula() {
+        const nebulaContainer = document.createElement('div');
+        nebulaContainer.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9998;
+            background: radial-gradient(ellipse at center, 
+                rgba(138, 43, 226, 0.3) 0%, 
+                rgba(75, 0, 130, 0.4) 30%, 
+                rgba(25, 25, 112, 0.5) 60%, 
+                rgba(0, 0, 0, 0.8) 100%);
+        `;
+        
+        // Создаем звезды в туманности
+        for (let i = 0; i < 200; i++) {
+            const star = document.createElement('div');
+            star.style.cssText = `
+                position: absolute;
+                width: ${Math.random() * 3 + 1}px;
+                height: ${Math.random() * 3 + 1}px;
+                background: radial-gradient(circle, #FFFFFF, #87CEEB, transparent);
+                border-radius: 50%;
+                left: ${Math.random() * 100}%;
+                top: ${Math.random() * 100}%;
+                animation: nebulaStar ${Math.random() * 5 + 3}s ease-in-out infinite;
+                animation-delay: ${Math.random() * 3}s;
+                box-shadow: 0 0 10px #FFFFFF;
+            `;
+            
+            nebulaContainer.appendChild(star);
+        }
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('nebulaStarAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'nebulaStarAnimation';
+            style.textContent = `
+                @keyframes nebulaStar {
+                    0%, 100% { 
+                        opacity: 0.3; 
+                        transform: scale(1);
+                    }
+                    50% { 
+                        opacity: 1; 
+                        transform: scale(1.5);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(nebulaContainer);
+        
+        setTimeout(() => {
+            if (nebulaContainer.parentNode) {
+                nebulaContainer.parentNode.removeChild(nebulaContainer);
+            }
+        }, 10000);
+    }
+    
+    // Сверхновая
+    function createSupernova() {
+        const supernovaContainer = document.createElement('div');
+        supernovaContainer.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            pointer-events: none;
+            z-index: 9998;
+            animation: supernovaAnimation 6s ease-out forwards;
+        `;
+        
+        // Создаем взрыв сверхновой
+        for (let i = 0; i < 300; i++) {
+            const explosionParticle = document.createElement('div');
+            explosionParticle.style.cssText = `
+                position: absolute;
+                width: ${Math.random() * 8 + 2}px;
+                height: ${Math.random() * 8 + 2}px;
+                background: radial-gradient(circle, #FFD700, #FF4500, #FF0000);
+                border-radius: 50%;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                animation: supernovaParticle ${Math.random() * 4 + 2}s ease-out forwards;
+                animation-delay: ${Math.random() * 1}s;
+                box-shadow: 0 0 15px #FFD700;
+            `;
+            
+            const angle = (i / 300) * Math.PI * 2;
+            const distance = 50 + Math.random() * 250;
+            const endX = Math.cos(angle) * distance;
+            const endY = Math.sin(angle) * distance;
+            
+            explosionParticle.style.setProperty('--endX', endX + 'px');
+            explosionParticle.style.setProperty('--endY', endY + 'px');
+            
+            supernovaContainer.appendChild(explosionParticle);
+        }
+        
+        // Добавляем CSS анимации
+        if (!document.getElementById('supernovaAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'supernovaAnimation';
+            style.textContent = `
+                @keyframes supernovaAnimation {
+                    0% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) scale(0);
+                    }
+                    20% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1);
+                    }
+                    80% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1.5);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) scale(2);
+                    }
+                }
+                @keyframes supernovaParticle {
+                    0% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(0);
+                    }
+                    30% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: translate(calc(-50% + var(--endX)), calc(-50% + var(--endY))) scale(0.5);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(supernovaContainer);
+        
+        setTimeout(() => {
+            if (supernovaContainer.parentNode) {
+                supernovaContainer.parentNode.removeChild(supernovaContainer);
+            }
+        }, 6000);
+    }
+    
+    // Солнечная вспышка
+    function createSolarFlare() {
+        const flareContainer = document.createElement('div');
+        flareContainer.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9998;
+            background: linear-gradient(45deg, 
+                rgba(255, 215, 0, 0.3) 0%, 
+                rgba(255, 165, 0, 0.4) 50%, 
+                rgba(255, 69, 0, 0.5) 100%);
+        `;
+        
+        // Создаем солнечные вспышки
+        for (let i = 0; i < 20; i++) {
+            const flare = document.createElement('div');
+            flare.style.cssText = `
+                position: absolute;
+                width: ${Math.random() * 100 + 50}px;
+                height: 4px;
+                background: linear-gradient(90deg, transparent, #FFD700, #FF4500, #FFD700, transparent);
+                left: ${Math.random() * 100}%;
+                top: ${Math.random() * 100}%;
+                transform: rotate(${Math.random() * 360}deg);
+                animation: solarFlareAnimation ${Math.random() * 2 + 1}s ease-out forwards;
+                animation-delay: ${Math.random() * 2}s;
+                box-shadow: 0 0 20px #FFD700;
+            `;
+            
+            flareContainer.appendChild(flare);
+        }
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('solarFlareAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'solarFlareAnimation';
+            style.textContent = `
+                @keyframes solarFlareAnimation {
+                    0% { 
+                        opacity: 0; 
+                        transform: rotate(var(--rotation)) scaleX(0);
+                    }
+                    50% { 
+                        opacity: 1; 
+                        transform: rotate(var(--rotation)) scaleX(1);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: rotate(var(--rotation)) scaleX(2);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(flareContainer);
+        
+        setTimeout(() => {
+            if (flareContainer.parentNode) {
+                flareContainer.parentNode.removeChild(flareContainer);
+            }
+        }, 5000);
+    }
+    
+    // Пояс астероидов
+    function createAsteroidBelt() {
+        const asteroidContainer = document.createElement('div');
+        asteroidContainer.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9998;
+        `;
+        
+        // Создаем астероиды
+        for (let i = 0; i < 100; i++) {
+            const asteroid = document.createElement('div');
+            asteroid.style.cssText = `
+                position: absolute;
+                width: ${Math.random() * 20 + 5}px;
+                height: ${Math.random() * 20 + 5}px;
+                background: linear-gradient(45deg, #8B4513, #654321, #8B4513);
+                left: ${Math.random() * 100}%;
+                top: ${Math.random() * 100}%;
+                animation: asteroidAnimation ${Math.random() * 8 + 5}s linear infinite;
+                animation-delay: ${Math.random() * 5}s;
+                border-radius: ${Math.random() * 50}%;
+                box-shadow: 0 0 10px #654321;
+            `;
+            
+            asteroidContainer.appendChild(asteroid);
+        }
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('asteroidAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'asteroidAnimation';
+            style.textContent = `
+                @keyframes asteroidAnimation {
+                    0% { 
+                        transform: translateX(-100px) translateY(0px) rotate(0deg);
+                        opacity: 0;
+                    }
+                    10% { 
+                        opacity: 1;
+                    }
+                    90% { 
+                        opacity: 1;
+                    }
+                    100% { 
+                        transform: translateX(100vw) translateY(-100px) rotate(360deg);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(asteroidContainer);
+        
+        setTimeout(() => {
+            if (asteroidContainer.parentNode) {
+                asteroidContainer.parentNode.removeChild(asteroidContainer);
+            }
+        }, 13000);
+    }
+    
+    // Кротовая нора
+    function createWormhole() {
+        const wormholeContainer = document.createElement('div');
+        wormholeContainer.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            pointer-events: none;
+            z-index: 9998;
+            animation: wormholeAnimation 7s ease-out forwards;
+        `;
+        
+        // Создаем кротовую нору
+        const wormhole = document.createElement('div');
+        wormhole.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, 
+                rgba(0, 0, 0, 0.9) 0%, 
+                rgba(75, 0, 130, 0.7) 30%, 
+                rgba(138, 43, 226, 0.5) 60%, 
+                rgba(255, 255, 255, 0.1) 100%);
+            border-radius: 50%;
+            animation: wormholeCore 1s ease-in-out infinite;
+            box-shadow: 0 0 50px #8A2BE2, inset 0 0 30px #000000;
+        `;
+        
+        wormholeContainer.appendChild(wormhole);
+        
+        // Создаем спиральные частицы
+        for (let i = 0; i < 80; i++) {
+            const particle = document.createElement('div');
+            particle.style.cssText = `
+                position: absolute;
+                width: ${Math.random() * 6 + 2}px;
+                height: ${Math.random() * 6 + 2}px;
+                background: radial-gradient(circle, #8A2BE2, #4B0082, transparent);
+                border-radius: 50%;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                animation: wormholeParticle ${Math.random() * 4 + 3}s linear infinite;
+                animation-delay: ${Math.random() * 3}s;
+                box-shadow: 0 0 10px #8A2BE2;
+            `;
+            
+            particle.style.setProperty('--orbit-radius', (100 + Math.random() * 50) + 'px');
+            particle.style.setProperty('--orbit-angle', (Math.random() * 360) + 'deg');
+            
+            wormholeContainer.appendChild(particle);
+        }
+        
+        // Добавляем CSS анимации
+        if (!document.getElementById('wormholeAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'wormholeAnimation';
+            style.textContent = `
+                @keyframes wormholeAnimation {
+                    0% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) scale(0) rotate(0deg);
+                    }
+                    20% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1) rotate(90deg);
+                    }
+                    80% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1.2) rotate(270deg);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) scale(1.5) rotate(360deg);
+                    }
+                }
+                @keyframes wormholeCore {
+                    0%, 100% { 
+                        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+                    }
+                    50% { 
+                        transform: translate(-50%, -50%) scale(1.1) rotate(180deg);
+                    }
+                }
+                @keyframes wormholeParticle {
+                    0% { 
+                        transform: translate(-50%, -50%) rotate(var(--orbit-angle)) translateX(var(--orbit-radius)) rotate(calc(-1 * var(--orbit-angle)));
+                        opacity: 1;
+                    }
+                    100% { 
+                        transform: translate(-50%, -50%) rotate(calc(var(--orbit-angle) + 720deg)) translateX(var(--orbit-radius)) rotate(calc(-1 * var(--orbit-angle) - 720deg));
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(wormholeContainer);
+        
+        setTimeout(() => {
+            if (wormholeContainer.parentNode) {
+                wormholeContainer.parentNode.removeChild(wormholeContainer);
+            }
+        }, 7000);
+    }
+    
+    // ВРЕМЕННЫЕ ЭФФЕКТЫ - МАНИПУЛЯЦИЯ ВРЕМЕНЕМ
+    
+    // Остановка времени
+    function createTimeStop() {
+        const timeStopContainer = document.createElement('div');
+        timeStopContainer.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9998;
+            background: rgba(0, 0, 0, 0.3);
+        `;
+        
+        // Создаем эффект остановки времени
+        const timeEffect = document.createElement('div');
+        timeEffect.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            border: 5px solid #00FFFF;
+            border-radius: 50%;
+            animation: timeStopAnimation 4s ease-out forwards;
+            box-shadow: 0 0 50px #00FFFF;
+        `;
+        
+        timeStopContainer.appendChild(timeEffect);
+        
+        // Создаем замороженные частицы
+        for (let i = 0; i < 100; i++) {
+            const frozenParticle = document.createElement('div');
+            frozenParticle.style.cssText = `
+                position: absolute;
+                width: ${Math.random() * 6 + 2}px;
+                height: ${Math.random() * 6 + 2}px;
+                background: radial-gradient(circle, #00FFFF, #0080FF);
+                border-radius: 50%;
+                left: ${Math.random() * 100}%;
+                top: ${Math.random() * 100}%;
+                animation: frozenParticleAnimation 4s ease-out forwards;
+                animation-delay: ${Math.random() * 2}s;
+                box-shadow: 0 0 10px #00FFFF;
+            `;
+            
+            timeStopContainer.appendChild(frozenParticle);
+        }
+        
+        // Добавляем CSS анимации
+        if (!document.getElementById('timeStopAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'timeStopAnimation';
+            style.textContent = `
+                @keyframes timeStopAnimation {
+                    0% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) scale(0) rotate(0deg);
+                    }
+                    30% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1) rotate(180deg);
+                    }
+                    70% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1.2) rotate(360deg);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) scale(1.5) rotate(540deg);
+                    }
+                }
+                @keyframes frozenParticleAnimation {
+                    0% { 
+                        opacity: 0; 
+                        transform: scale(0);
+                    }
+                    50% { 
+                        opacity: 1; 
+                        transform: scale(1);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: scale(0.5);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(timeStopContainer);
+        
+        setTimeout(() => {
+            if (timeStopContainer.parentNode) {
+                timeStopContainer.parentNode.removeChild(timeStopContainer);
+            }
+        }, 4000);
+    }
+    
+    // Ускорение времени
+    function createTimeAcceleration() {
+        const timeAccelContainer = document.createElement('div');
+        timeAccelContainer.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9998;
+            background: linear-gradient(45deg, 
+                rgba(255, 255, 0, 0.2) 0%, 
+                rgba(255, 165, 0, 0.3) 50%, 
+                rgba(255, 69, 0, 0.4) 100%);
+        `;
+        
+        // Создаем быстрые частицы
+        for (let i = 0; i < 150; i++) {
+            const fastParticle = document.createElement('div');
+            fastParticle.style.cssText = `
+                position: absolute;
+                width: ${Math.random() * 4 + 1}px;
+                height: ${Math.random() * 4 + 1}px;
+                background: radial-gradient(circle, #FFD700, #FFA500);
+                border-radius: 50%;
+                left: ${Math.random() * 100}%;
+                top: ${Math.random() * 100}%;
+                animation: fastParticleAnimation ${Math.random() * 1 + 0.5}s linear infinite;
+                animation-delay: ${Math.random() * 1}s;
+                box-shadow: 0 0 8px #FFD700;
+            `;
+            
+            timeAccelContainer.appendChild(fastParticle);
+        }
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('fastParticleAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'fastParticleAnimation';
+            style.textContent = `
+                @keyframes fastParticleAnimation {
+                    0% { 
+                        transform: translateX(0px) translateY(0px) scale(1);
+                        opacity: 0;
+                    }
+                    10% { 
+                        opacity: 1;
+                    }
+                    90% { 
+                        opacity: 1;
+                    }
+                    100% { 
+                        transform: translateX(${Math.random() * 200 - 100}px) translateY(${Math.random() * 200 - 100}px) scale(0.5);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(timeAccelContainer);
+        
+        setTimeout(() => {
+            if (timeAccelContainer.parentNode) {
+                timeAccelContainer.parentNode.removeChild(timeAccelContainer);
+            }
+        }, 3000);
+    }
+    
+    // Обращение времени
+    function createTimeReversal() {
+        const timeReverseContainer = document.createElement('div');
+        timeReverseContainer.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 400px;
+            pointer-events: none;
+            z-index: 9998;
+            animation: timeReverseAnimation 5s ease-out forwards;
+        `;
+        
+        // Создаем обратные частицы
+        for (let i = 0; i < 80; i++) {
+            const reverseParticle = document.createElement('div');
+            reverseParticle.style.cssText = `
+                position: absolute;
+                width: ${Math.random() * 8 + 3}px;
+                height: ${Math.random() * 8 + 3}px;
+                background: radial-gradient(circle, #FF69B4, #FF1493);
+                border-radius: 50%;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                animation: reverseParticleAnimation ${Math.random() * 3 + 2}s ease-out forwards;
+                animation-delay: ${Math.random() * 2}s;
+                box-shadow: 0 0 15px #FF69B4;
+            `;
+            
+            const angle = (i / 80) * Math.PI * 2;
+            const distance = 50 + Math.random() * 150;
+            const startX = Math.cos(angle) * distance;
+            const startY = Math.sin(angle) * distance;
+            
+            reverseParticle.style.setProperty('--startX', startX + 'px');
+            reverseParticle.style.setProperty('--startY', startY + 'px');
+            
+            timeReverseContainer.appendChild(reverseParticle);
+        }
+        
+        // Добавляем CSS анимации
+        if (!document.getElementById('timeReverseAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'timeReverseAnimation';
+            style.textContent = `
+                @keyframes timeReverseAnimation {
+                    0% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) scale(0) rotate(0deg);
+                    }
+                    20% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1) rotate(-90deg);
+                    }
+                    80% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1.3) rotate(-270deg);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) scale(1.5) rotate(-360deg);
+                    }
+                }
+                @keyframes reverseParticleAnimation {
+                    0% { 
+                        opacity: 0; 
+                        transform: translate(calc(-50% + var(--startX)), calc(-50% + var(--startY))) scale(0);
+                    }
+                    50% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: translate(calc(-50% - var(--startX)), calc(-50% - var(--startY))) scale(0.5);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(timeReverseContainer);
+        
+        setTimeout(() => {
+            if (timeReverseContainer.parentNode) {
+                timeReverseContainer.parentNode.removeChild(timeReverseContainer);
+            }
+        }, 5000);
+    }
+    
+    // Временная петля
+    function createTimeLoop() {
+        const timeLoopContainer = document.createElement('div');
+        timeLoopContainer.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            height: 500px;
+            pointer-events: none;
+            z-index: 9998;
+            animation: timeLoopAnimation 6s ease-out forwards;
+        `;
+        
+        // Создаем петлю времени
+        const timeLoop = document.createElement('div');
+        timeLoop.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            border: 3px solid #32CD32;
+            border-radius: 50%;
+            animation: timeLoopCore 2s linear infinite;
+            box-shadow: 0 0 30px #32CD32;
+        `;
+        
+        timeLoopContainer.appendChild(timeLoop);
+        
+        // Создаем циклические частицы
+        for (let i = 0; i < 60; i++) {
+            const loopParticle = document.createElement('div');
+            loopParticle.style.cssText = `
+                position: absolute;
+                width: 6px;
+                height: 6px;
+                background: radial-gradient(circle, #32CD32, #228B22);
+                border-radius: 50%;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                animation: loopParticleAnimation 3s linear infinite;
+                animation-delay: ${i * 0.05}s;
+                box-shadow: 0 0 10px #32CD32;
+            `;
+            
+            loopParticle.style.setProperty('--orbit-radius', (150 + i * 2) + 'px');
+            loopParticle.style.setProperty('--orbit-angle', (i * 6) + 'deg');
+            
+            timeLoopContainer.appendChild(loopParticle);
+        }
+        
+        // Добавляем CSS анимации
+        if (!document.getElementById('timeLoopAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'timeLoopAnimation';
+            style.textContent = `
+                @keyframes timeLoopAnimation {
+                    0% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) scale(0) rotate(0deg);
+                    }
+                    20% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1) rotate(90deg);
+                    }
+                    80% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1.2) rotate(270deg);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) scale(1.5) rotate(360deg);
+                    }
+                }
+                @keyframes timeLoopCore {
+                    0% { 
+                        transform: translate(-50%, -50%) rotate(0deg);
+                    }
+                    100% { 
+                        transform: translate(-50%, -50%) rotate(360deg);
+                    }
+                }
+                @keyframes loopParticleAnimation {
+                    0% { 
+                        transform: translate(-50%, -50%) rotate(var(--orbit-angle)) translateX(var(--orbit-radius)) rotate(calc(-1 * var(--orbit-angle)));
+                    }
+                    100% { 
+                        transform: translate(-50%, -50%) rotate(calc(var(--orbit-angle) + 360deg)) translateX(var(--orbit-radius)) rotate(calc(-1 * var(--orbit-angle) - 360deg));
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(timeLoopContainer);
+        
+        setTimeout(() => {
+            if (timeLoopContainer.parentNode) {
+                timeLoopContainer.parentNode.removeChild(timeLoopContainer);
+            }
+        }, 6000);
+    }
+    
+    // Разлом времени
+    function createTimeFracture() {
+        const timeFractureContainer = document.createElement('div');
+        timeFractureContainer.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9998;
+            background: linear-gradient(45deg, 
+                rgba(255, 0, 255, 0.2) 0%, 
+                rgba(0, 255, 255, 0.3) 50%, 
+                rgba(255, 255, 0, 0.4) 100%);
+        `;
+        
+        // Создаем трещины времени
+        for (let i = 0; i < 15; i++) {
+            const timeCrack = document.createElement('div');
+            timeCrack.style.cssText = `
+                position: absolute;
+                width: ${Math.random() * 300 + 100}px;
+                height: 3px;
+                background: linear-gradient(90deg, 
+                    transparent, 
+                    #FF00FF, 
+                    #00FFFF, 
+                    #FFFF00, 
+                    transparent);
+                left: ${Math.random() * 80}%;
+                top: ${Math.random() * 80}%;
+                transform: rotate(${Math.random() * 360}deg);
+                animation: timeCrackAnimation 4s ease-out forwards;
+                animation-delay: ${Math.random() * 2}s;
+                box-shadow: 0 0 15px #FF00FF;
+            `;
+            
+            timeFractureContainer.appendChild(timeCrack);
+        }
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('timeCrackAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'timeCrackAnimation';
+            style.textContent = `
+                @keyframes timeCrackAnimation {
+                    0% { 
+                        opacity: 0; 
+                        transform: rotate(var(--rotation)) scaleX(0);
+                    }
+                    30% { 
+                        opacity: 1; 
+                        transform: rotate(var(--rotation)) scaleX(1);
+                    }
+                    70% { 
+                        opacity: 1; 
+                        transform: rotate(var(--rotation)) scaleX(1.2);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: rotate(var(--rotation)) scaleX(0.5);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(timeFractureContainer);
+        
+        setTimeout(() => {
+            if (timeFractureContainer.parentNode) {
+                timeFractureContainer.parentNode.removeChild(timeFractureContainer);
+            }
+        }, 6000);
+    }
+    
+    // Временной шторм
+    function createTemporalStorm() {
+        const temporalStormContainer = document.createElement('div');
+        temporalStormContainer.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9998;
+            background: linear-gradient(180deg, 
+                rgba(255, 0, 255, 0.3) 0%, 
+                rgba(0, 255, 255, 0.4) 30%, 
+                rgba(255, 255, 0, 0.5) 60%, 
+                rgba(255, 0, 0, 0.6) 100%);
+        `;
+        
+        // Создаем хаотические временные частицы
+        for (let i = 0; i < 200; i++) {
+            const temporalParticle = document.createElement('div');
+            const colors = ['#FF00FF', '#00FFFF', '#FFFF00', '#FF0000'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            
+            temporalParticle.style.cssText = `
+                position: absolute;
+                width: ${Math.random() * 10 + 3}px;
+                height: ${Math.random() * 10 + 3}px;
+                background: radial-gradient(circle, ${randomColor}, transparent);
+                border-radius: 50%;
+                left: ${Math.random() * 100}%;
+                top: ${Math.random() * 100}%;
+                animation: temporalParticleAnimation ${Math.random() * 4 + 2}s ease-out forwards;
+                animation-delay: ${Math.random() * 3}s;
+                box-shadow: 0 0 15px ${randomColor};
+            `;
+            
+            temporalStormContainer.appendChild(temporalParticle);
+        }
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('temporalParticleAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'temporalParticleAnimation';
+            style.textContent = `
+                @keyframes temporalParticleAnimation {
+                    0% { 
+                        opacity: 0; 
+                        transform: scale(0) rotate(0deg);
+                    }
+                    25% { 
+                        opacity: 1; 
+                        transform: scale(1.5) rotate(90deg);
+                    }
+                    50% { 
+                        opacity: 1; 
+                        transform: scale(0.8) rotate(180deg);
+                    }
+                    75% { 
+                        opacity: 1; 
+                        transform: scale(1.2) rotate(270deg);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: scale(0) rotate(360deg);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(temporalStormContainer);
+        
+        setTimeout(() => {
+            if (temporalStormContainer.parentNode) {
+                temporalStormContainer.parentNode.removeChild(temporalStormContainer);
+            }
+        }, 6000);
+    }
+    
+    // РЕЖИМ ХАОСА - ВСЕ ЭФФЕКТЫ ОДНОВРЕМЕННО!
+    
+    // Обычный режим хаоса
+    function createChaosMode() {
+        showMagicInfo("🔥 РЕЖИМ ХАОСА АКТИВИРОВАН! 🔥");
+        
+        // Запускаем все элементальные эффекты
+        setTimeout(() => createFireStorm(), 0);
+        setTimeout(() => createWaterWhirlpool(), 500);
+        setTimeout(() => createEarthquake(), 1000);
+        setTimeout(() => createWindTornado(), 1500);
+        setTimeout(() => createIceAge(), 2000);
+        setTimeout(() => createThunderStorm(), 2500);
+        
+        // Запускаем космические эффекты
+        setTimeout(() => createBlackHole(), 3000);
+        setTimeout(() => createNebula(), 3500);
+        setTimeout(() => createSupernova(), 4000);
+        setTimeout(() => createSolarFlare(), 4500);
+        setTimeout(() => createAsteroidBelt(), 5000);
+        setTimeout(() => createWormhole(), 5500);
+        
+        // Запускаем временные эффекты
+        setTimeout(() => createTimeStop(), 6000);
+        setTimeout(() => createTimeAcceleration(), 6500);
+        setTimeout(() => createTimeReversal(), 7000);
+        setTimeout(() => createTimeLoop(), 7500);
+        setTimeout(() => createTimeFracture(), 8000);
+        setTimeout(() => createTemporalStorm(), 8500);
+        
+        // Дополнительные эффекты
+        setTimeout(() => createRainbow(), 9000);
+        setTimeout(() => createLightning(), 9500);
+        
+        // Создаем хаотический фон
+        const chaosBackground = document.createElement('div');
+        chaosBackground.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9997;
+            background: linear-gradient(45deg, 
+                rgba(255, 0, 0, 0.3) 0%, 
+                rgba(0, 255, 0, 0.3) 16.66%, 
+                rgba(0, 0, 255, 0.3) 33.33%, 
+                rgba(255, 255, 0, 0.3) 50%, 
+                rgba(255, 0, 255, 0.3) 66.66%, 
+                rgba(0, 255, 255, 0.3) 83.33%, 
+                rgba(255, 0, 0, 0.3) 100%);
+            animation: chaosBackgroundAnimation 15s ease-in-out infinite;
+        `;
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('chaosBackgroundAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'chaosBackgroundAnimation';
+            style.textContent = `
+                @keyframes chaosBackgroundAnimation {
+                    0%, 100% { 
+                        filter: hue-rotate(0deg) brightness(1);
+                    }
+                    25% { 
+                        filter: hue-rotate(90deg) brightness(1.2);
+                    }
+                    50% { 
+                        filter: hue-rotate(180deg) brightness(0.8);
+                    }
+                    75% { 
+                        filter: hue-rotate(270deg) brightness(1.1);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(chaosBackground);
+        
+        setTimeout(() => {
+            if (chaosBackground.parentNode) {
+                chaosBackground.parentNode.removeChild(chaosBackground);
+            }
+        }, 15000);
+    }
+    
+    // Ультимативный режим хаоса
+    function createUltimateChaosMode() {
+        showMagicInfo("💀 УЛЬТИМАТИВНЫЙ ХАОС! 💀");
+        
+        // Запускаем ВСЕ эффекты с минимальными задержками
+        const allEffects = [
+            createFireStorm, createWaterWhirlpool, createEarthquake, createWindTornado, createIceAge, createThunderStorm,
+            createBlackHole, createNebula, createSupernova, createSolarFlare, createAsteroidBelt, createWormhole,
+            createTimeStop, createTimeAcceleration, createTimeReversal, createTimeLoop, createTimeFracture, createTemporalStorm,
+            createRainbow, createLightning, createMagicExplosion, createSynergyEffect
+        ];
+        
+        // Запускаем все эффекты с интервалом 100мс
+        allEffects.forEach((effect, index) => {
+            setTimeout(() => {
+                try {
+                    effect();
+                } catch (e) {
+                    console.log('Effect error:', e);
+                }
+            }, index * 100);
+        });
+        
+        // Создаем ультимативный хаотический фон
+        const ultimateChaosBackground = document.createElement('div');
+        ultimateChaosBackground.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9997;
+            background: radial-gradient(circle at center, 
+                rgba(255, 0, 0, 0.4) 0%, 
+                rgba(0, 255, 0, 0.4) 14.28%, 
+                rgba(0, 0, 255, 0.4) 28.57%, 
+                rgba(255, 255, 0, 0.4) 42.85%, 
+                rgba(255, 0, 255, 0.4) 57.14%, 
+                rgba(0, 255, 255, 0.4) 71.42%, 
+                rgba(255, 128, 0, 0.4) 85.71%, 
+                rgba(255, 0, 0, 0.4) 100%);
+            animation: ultimateChaosBackgroundAnimation 2s ease-in-out infinite;
+        `;
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('ultimateChaosBackgroundAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'ultimateChaosBackgroundAnimation';
+            style.textContent = `
+                @keyframes ultimateChaosBackgroundAnimation {
+                    0% { 
+                        filter: hue-rotate(0deg) brightness(1) saturate(1);
+                        transform: scale(1) rotate(0deg);
+                    }
+                    25% { 
+                        filter: hue-rotate(90deg) brightness(1.5) saturate(2);
+                        transform: scale(1.1) rotate(90deg);
+                    }
+                    50% { 
+                        filter: hue-rotate(180deg) brightness(0.5) saturate(0.5);
+                        transform: scale(0.9) rotate(180deg);
+                    }
+                    75% { 
+                        filter: hue-rotate(270deg) brightness(1.3) saturate(1.8);
+                        transform: scale(1.05) rotate(270deg);
+                    }
+                    100% { 
+                        filter: hue-rotate(360deg) brightness(1) saturate(1);
+                        transform: scale(1) rotate(360deg);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(ultimateChaosBackground);
+        
+        // Создаем хаотические частицы по всему экрану
+        for (let i = 0; i < 500; i++) {
+            setTimeout(() => {
+                const chaosParticle = document.createElement('div');
+                const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#FF8000'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                chaosParticle.style.cssText = `
+                    position: fixed;
+                    width: ${Math.random() * 20 + 5}px;
+                    height: ${Math.random() * 20 + 5}px;
+                    background: radial-gradient(circle, ${randomColor}, transparent);
+                    border-radius: 50%;
+                    left: ${Math.random() * 100}%;
+                    top: ${Math.random() * 100}%;
+                    pointer-events: none;
+                    z-index: 9998;
+                    animation: ultimateChaosParticle ${Math.random() * 3 + 2}s ease-out forwards;
+                    box-shadow: 0 0 20px ${randomColor};
+                `;
+                
+                document.body.appendChild(chaosParticle);
+                
+                setTimeout(() => {
+                    if (chaosParticle.parentNode) {
+                        chaosParticle.parentNode.removeChild(chaosParticle);
+                    }
+                }, 5000);
+            }, i * 50);
+        }
+        
+        // Добавляем CSS анимацию для частиц
+        if (!document.getElementById('ultimateChaosParticleAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'ultimateChaosParticleAnimation';
+            style.textContent = `
+                @keyframes ultimateChaosParticle {
+                    0% { 
+                        opacity: 1; 
+                        transform: scale(0) rotate(0deg);
+                    }
+                    25% { 
+                        opacity: 1; 
+                        transform: scale(2) rotate(90deg);
+                    }
+                    50% { 
+                        opacity: 1; 
+                        transform: scale(0.5) rotate(180deg);
+                    }
+                    75% { 
+                        opacity: 1; 
+                        transform: scale(1.5) rotate(270deg);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: scale(0) rotate(360deg);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        setTimeout(() => {
+            if (ultimateChaosBackground.parentNode) {
+                ultimateChaosBackground.parentNode.removeChild(ultimateChaosBackground);
+            }
+        }, 20000);
+    }
+    
+    // МНОГОПОЛЬЗОВАТЕЛЬСКАЯ СИСТЕМА МАГИИ
+    
+    // Инициализация многопользовательской системы
+    function initializeMultiplayerMagic() {
+        // Создаем UI для многопользовательской системы
+        createMultiplayerUI();
+        
+        // Инициализируем симуляцию сети
+        initializeNetworkSimulation();
+        
+        // Добавляем виртуальных игроков для демонстрации
+        addVirtualPlayers();
+        
+        // Показываем информацию о подключении
+        showMultiplayerInfo();
+        
+        // Создаем чат для магов
+        createMagicChat();
+        
+        // Создаем систему поиска магов
+        createMagicRadar();
+        
+        // Создаем систему пробивания дыр в реальности
+        createRealityPunchHole();
+        
+        // Инициализируем мобильную оптимизацию
+        if (mobileUI.enabled) {
+            initializeMobileOptimization();
+        }
+    }
+    
+    // Создание UI для многопользовательской системы
+    function createMultiplayerUI() {
+        const multiplayerPanel = document.createElement('div');
+        multiplayerPanel.id = 'multiplayerPanel';
+        multiplayerPanel.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            z-index: 9999;
+            border: 2px solid #00FF00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+            min-width: 250px;
+            max-width: 300px;
+        `;
+        
+        multiplayerPanel.innerHTML = `
+            <div style="color: #00FF00; font-weight: bold; margin-bottom: 10px;">🌐 МАГИЧЕСКАЯ СЕТЬ</div>
+            <div>Ваш ID: <span style="color: #00FFFF;">${playerId}</span></div>
+            <div>Имя: <span style="color: #FFD700;">${playerName}</span></div>
+            <div>Статус: <span id="networkStatus" style="color: #00FF00;">Подключен</span></div>
+            <div>Игроков онлайн: <span id="playerCount" style="color: #FF69B4;">1</span></div>
+            <div style="margin-top: 10px; font-size: 10px; color: #CCC;">
+                Магия синхронизируется между всеми игроками!
+            </div>
+            <div id="recentMagic" style="margin-top: 10px; font-size: 10px; color: #FFD700;">
+                Последняя магия: <span id="lastMagicEffect">Нет</span>
+            </div>
+        `;
+        
+        document.body.appendChild(multiplayerPanel);
+    }
+    
+    // Инициализация симуляции сети
+    function initializeNetworkSimulation() {
+        // Симулируем подключение к сети
+        setTimeout(() => {
+            magicNetwork.isConnected = true;
+            updateNetworkStatus('Подключен');
+            
+            // Симулируем получение магии от других игроков
+            simulateIncomingMagic();
+        }, 1000);
+    }
+    
+    // Добавление виртуальных игроков для демонстрации
+    function addVirtualPlayers() {
+        const virtualPlayers = [
+            { id: 'mage_001', name: 'Алхимик_42', level: 5 },
+            { id: 'mage_002', name: 'Некромант_99', level: 8 },
+            { id: 'mage_003', name: 'Элементалист_17', level: 3 },
+            { id: 'mage_004', name: 'Хрономант_77', level: 12 },
+            { id: 'mage_005', name: 'Космолог_33', level: 6 }
+        ];
+        
+        virtualPlayers.forEach(player => {
+            networkSimulation.players.set(player.id, {
+                ...player,
+                lastMagicTime: Date.now() - Math.random() * 30000,
+                magicCount: Math.floor(Math.random() * 50)
+            });
+        });
+        
+        updatePlayerCount();
+    }
+    
+    // Симуляция входящей магии от других игроков
+    function simulateIncomingMagic() {
+        setInterval(() => {
+            if (!magicNetwork.isConnected) return;
+            
+            // Случайно выбираем виртуального игрока
+            const players = Array.from(networkSimulation.players.values());
+            if (players.length === 0) return;
+            
+            const randomPlayer = players[Math.floor(Math.random() * players.length)];
+            
+            // Проверяем, не слишком ли часто он использует магию
+            if (Date.now() - randomPlayer.lastMagicTime < 5000) return;
+            
+            // Выбираем случайный эффект
+            const allEffects = [];
+            Object.values(magicEffects).forEach(category => {
+                category.forEach(effect => allEffects.push(effect));
+            });
+            
+            const randomEffect = allEffects[Math.floor(Math.random() * allEffects.length)];
+            
+            // Отправляем магию от другого игрока
+            receiveMagicFromPlayer(randomPlayer, randomEffect);
+            
+            // Обновляем время последней магии
+            randomPlayer.lastMagicTime = Date.now();
+            randomPlayer.magicCount++;
+            
+        }, Math.random() * 10000 + 5000); // Каждые 5-15 секунд
+    }
+    
+    // Получение магии от другого игрока
+    function receiveMagicFromPlayer(player, effect) {
+        // Показываем уведомление
+        showMagicFromPlayer(player, effect);
+        
+        // Запускаем эффект
+        setTimeout(() => {
+            effect.effect();
+            showMagicInfo(`Магия от ${player.name}: ${effect.name}`);
+        }, networkSimulation.latency);
+        
+        // Обновляем статистику
+        updateLastMagicEffect(`${player.name}: ${effect.name}`);
+    }
+    
+    // Показ магии от другого игрока
+    function showMagicFromPlayer(player, effect) {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            z-index: 10000;
+            border: 3px solid #00FF00;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+            text-align: center;
+            animation: magicNotificationAnimation 3s ease-out forwards;
+        `;
+        
+        notification.innerHTML = `
+            <div style="color: #00FF00; font-weight: bold; margin-bottom: 10px;">
+                🌟 МАГИЯ ОТ ДРУГОГО ИГРОКА! 🌟
+            </div>
+            <div style="color: #FFD700; font-size: 18px; margin-bottom: 10px;">
+                ${player.name}
+            </div>
+            <div style="color: #00FFFF; font-size: 14px;">
+                ${effect.name}
+            </div>
+            <div style="color: #FF69B4; font-size: 12px; margin-top: 10px;">
+                Уровень: ${player.level}
+            </div>
+        `;
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('magicNotificationAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'magicNotificationAnimation';
+            style.textContent = `
+                @keyframes magicNotificationAnimation {
+                    0% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) scale(0.5);
+                    }
+                    20% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1.1);
+                    }
+                    80% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) scale(0.8);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 3000);
+    }
+    
+    // Отправка магии другим игрокам
+    function sendMagicToPlayers(effect) {
+        if (!magicNetwork.isConnected) return;
+        
+        const magicData = {
+            type: 'magic_cast',
+            playerId: playerId,
+            playerName: playerName,
+            effectName: effect.name,
+            timestamp: Date.now(),
+            level: magicLevel
+        };
+        
+        // Симулируем отправку в сеть
+        setTimeout(() => {
+            // В реальной системе здесь был бы WebSocket.send()
+            console.log('Отправка магии в сеть:', magicData);
+            
+            // Обновляем статистику
+            updateLastMagicEffect(`Вы: ${effect.name}`);
+        }, networkSimulation.latency);
+    }
+    
+    // Обновление статуса сети
+    function updateNetworkStatus(status) {
+        const statusElement = document.getElementById('networkStatus');
+        if (statusElement) {
+            statusElement.textContent = status;
+            statusElement.style.color = status === 'Подключен' ? '#00FF00' : '#FF0000';
+        }
+    }
+    
+    // Обновление количества игроков
+    function updatePlayerCount() {
+        const countElement = document.getElementById('playerCount');
+        if (countElement) {
+            const totalPlayers = networkSimulation.players.size + 1; // +1 для текущего игрока
+            countElement.textContent = totalPlayers;
+        }
+    }
+    
+    // Обновление последнего магического эффекта
+    function updateLastMagicEffect(effect) {
+        const effectElement = document.getElementById('lastMagicEffect');
+        if (effectElement) {
+            effectElement.textContent = effect;
+        }
+    }
+    
+    // Показ информации о многопользовательской системе
+    function showMultiplayerInfo() {
+        const infoDiv = document.createElement('div');
+        infoDiv.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            z-index: 9999;
+            border: 2px solid #00FF00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+            max-width: 300px;
+            animation: multiplayerInfoAnimation 8s ease-in-out infinite;
+        `;
+        
+        infoDiv.innerHTML = `
+            <div style="color: #00FF00; font-weight: bold; margin-bottom: 10px;">🌐 МНОГОПОЛЬЗОВАТЕЛЬСКАЯ МАГИЯ</div>
+            <div>• Ваша магия влияет на всех игроков</div>
+            <div>• Магия других игроков появляется у вас</div>
+            <div>• Синхронизация в реальном времени</div>
+            <div>• Общий магический опыт</div>
+            <div style="margin-top: 10px; color: #FFD700;">
+                Используйте магию и наблюдайте за реакцией других!
+            </div>
+        `;
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('multiplayerInfoAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'multiplayerInfoAnimation';
+            style.textContent = `
+                @keyframes multiplayerInfoAnimation {
+                    0%, 100% { opacity: 0.7; }
+                    50% { opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(infoDiv);
+        
+        // Скрываем через 15 секунд
+        setTimeout(() => {
+            if (infoDiv.parentNode) {
+                infoDiv.style.animation = 'multiplayerInfoFadeOut 2s ease-out forwards';
+                setTimeout(() => {
+                    if (infoDiv.parentNode) {
+                        infoDiv.parentNode.removeChild(infoDiv);
+                    }
+                }, 2000);
+            }
+        }, 15000);
+        
+        // Добавляем CSS анимацию исчезновения
+        if (!document.getElementById('multiplayerInfoFadeOutAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'multiplayerInfoFadeOutAnimation';
+            style.textContent = `
+                @keyframes multiplayerInfoFadeOut {
+                    0% { opacity: 1; }
+                    100% { opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+    
+    // Создание чата для магов
+    function createMagicChat() {
+        const chatContainer = document.createElement('div');
+        chatContainer.id = 'magicChat';
+        chatContainer.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 350px;
+            height: 300px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #8A2BE2;
+            border-radius: 10px;
+            font-family: Arial, sans-serif;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 20px rgba(138, 43, 226, 0.3);
+        `;
+        
+        // Заголовок чата
+        const chatHeader = document.createElement('div');
+        chatHeader.style.cssText = `
+            background: linear-gradient(90deg, #8A2BE2, #4B0082);
+            color: white;
+            padding: 10px;
+            border-radius: 8px 8px 0 0;
+            font-weight: bold;
+            text-align: center;
+        `;
+        chatHeader.textContent = '💬 ЧАТ МАГОВ';
+        chatContainer.appendChild(chatHeader);
+        
+        // Область сообщений
+        const messagesArea = document.createElement('div');
+        messagesArea.id = 'chatMessages';
+        messagesArea.style.cssText = `
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            color: white;
+            font-size: 12px;
+            background: rgba(0, 0, 0, 0.5);
+        `;
+        chatContainer.appendChild(messagesArea);
+        
+        // Поле ввода
+        const inputContainer = document.createElement('div');
+        inputContainer.style.cssText = `
+            display: flex;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 0 0 8px 8px;
+        `;
+        
+        const messageInput = document.createElement('input');
+        messageInput.type = 'text';
+        messageInput.placeholder = 'Введите сообщение...';
+        messageInput.style.cssText = `
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #8A2BE2;
+            border-radius: 5px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            font-size: 12px;
+        `;
+        
+        const sendButton = document.createElement('button');
+        sendButton.textContent = 'Отправить';
+        sendButton.style.cssText = `
+            margin-left: 10px;
+            padding: 8px 15px;
+            background: linear-gradient(45deg, #8A2BE2, #4B0082);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        `;
+        
+        inputContainer.appendChild(messageInput);
+        inputContainer.appendChild(sendButton);
+        chatContainer.appendChild(inputContainer);
+        
+        document.body.appendChild(chatContainer);
+        
+        // Обработчики событий
+        sendButton.addEventListener('click', () => {
+            sendChatMessage(messageInput.value);
+            messageInput.value = '';
+        });
+        
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendChatMessage(messageInput.value);
+                messageInput.value = '';
+            }
+        });
+        
+        // Добавляем приветственные сообщения
+        addChatMessage('Система', 'Добро пожаловать в чат магов!', '#00FF00');
+        addChatMessage('Алхимик_42', 'Привет всем! Кто хочет создать зелье?', '#FFD700');
+        addChatMessage('Некромант_99', 'Темная магия правит миром!', '#FF0000');
+        
+        // Симулируем сообщения от других игроков
+        simulateChatMessages();
+    }
+    
+    // Отправка сообщения в чат
+    function sendChatMessage(message) {
+        if (!message.trim()) return;
+        
+        addChatMessage(playerName, message, '#00FFFF');
+        
+        // Симулируем получение сообщения другими игроками
+        setTimeout(() => {
+            const responses = [
+                'Интересно...',
+                'Отличная идея!',
+                'Попробуем вместе!',
+                'Магия усиливается!',
+                'Великолепно!',
+                'Это работает!',
+                'Невероятно!',
+                'Продолжаем!'
+            ];
+            
+            const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+            const players = Array.from(networkSimulation.players.values());
+            const randomPlayer = players[Math.floor(Math.random() * players.length)];
+            
+            addChatMessage(randomPlayer.name, randomResponse, '#FF69B4');
+        }, Math.random() * 3000 + 1000);
+    }
+    
+    // Добавление сообщения в чат
+    function addChatMessage(sender, message, color) {
+        const messagesArea = document.getElementById('chatMessages');
+        if (!messagesArea) return;
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.style.cssText = `
+            margin-bottom: 5px;
+            padding: 5px;
+            border-radius: 5px;
+            background: rgba(0, 0, 0, 0.3);
+        `;
+        
+        const senderSpan = document.createElement('span');
+        senderSpan.style.cssText = `color: ${color}; font-weight: bold;`;
+        senderSpan.textContent = sender + ': ';
+        
+        const messageSpan = document.createElement('span');
+        messageSpan.style.color = 'white';
+        messageSpan.textContent = message;
+        
+        messageDiv.appendChild(senderSpan);
+        messageDiv.appendChild(messageSpan);
+        messagesArea.appendChild(messageDiv);
+        
+        // Прокручиваем вниз
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+        
+        // Ограничиваем количество сообщений
+        const messages = messagesArea.children;
+        if (messages.length > 50) {
+            messagesArea.removeChild(messages[0]);
+        }
+    }
+    
+    // Симуляция сообщений в чате
+    function simulateChatMessages() {
+        const chatMessages = [
+            { text: 'Кто-нибудь знает заклинание левитации?', sender: 'Элементалист_17' },
+            { text: 'Попробуйте комбинацию ветра и земли!', sender: 'Хрономант_77' },
+            { text: 'Только что создал новую магию!', sender: 'Космолог_33' },
+            { text: 'Временные эффекты работают отлично!', sender: 'Хрономант_77' },
+            { text: 'Космическая магия невероятна!', sender: 'Космолог_33' },
+            { text: 'Элементальные комбинации - это сила!', sender: 'Элементалист_17' },
+            { text: 'Темная магия требует осторожности...', sender: 'Некромант_99' },
+            { text: 'Алхимия - основа всех магических искусств!', sender: 'Алхимик_42' }
+        ];
+        
+        setInterval(() => {
+            if (Math.random() < 0.3) { // 30% шанс сообщения каждые 10 секунд
+                const randomMessage = chatMessages[Math.floor(Math.random() * chatMessages.length)];
+                addChatMessage(randomMessage.sender, randomMessage.text, '#FFD700');
+            }
+        }, 10000);
+    }
+    
+    // МАГИЧЕСКИЙ РАДАР И СИСТЕМА ПОИСКА МАГОВ
+    
+    // Создание магического радара
+    function createMagicRadar() {
+        const radarContainer = document.createElement('div');
+        radarContainer.id = 'magicRadar';
+        radarContainer.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 200px;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 3px solid #00FF00;
+            border-radius: 50%;
+            z-index: 9999;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+        `;
+        
+        // Создаем радарную сетку
+        const radarGrid = document.createElement('div');
+        radarGrid.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 180px;
+            height: 180px;
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            border-radius: 50%;
+        `;
+        radarContainer.appendChild(radarGrid);
+        
+        // Создаем центральную точку (игрок)
+        const centerPoint = document.createElement('div');
+        centerPoint.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            background: #00FF00;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #00FF00;
+        `;
+        radarContainer.appendChild(centerPoint);
+        
+        // Создаем сканирующую линию
+        const scanLine = document.createElement('div');
+        scanLine.id = 'radarScanLine';
+        scanLine.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2px;
+            height: 90px;
+            background: linear-gradient(to bottom, transparent, #00FF00, transparent);
+            transform-origin: bottom center;
+            animation: radarScan 3s linear infinite;
+        `;
+        radarContainer.appendChild(scanLine);
+        
+        // Заголовок радара
+        const radarTitle = document.createElement('div');
+        radarTitle.style.cssText = `
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #00FF00;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+        `;
+        radarTitle.textContent = '🔍 МАГИЧЕСКИЙ РАДАР';
+        radarContainer.appendChild(radarTitle);
+        
+        // Информационная панель
+        const radarInfo = document.createElement('div');
+        radarInfo.id = 'radarInfo';
+        radarInfo.style.cssText = `
+            position: absolute;
+            bottom: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #00FF00;
+        `;
+        radarInfo.innerHTML = `
+            <div>Найдено магов: <span id="detectedMages">0</span></div>
+            <div>Ближайший: <span id="nearestMage">Нет</span></div>
+        `;
+        radarContainer.appendChild(radarInfo);
+        
+        document.body.appendChild(radarContainer);
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('radarScanAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'radarScanAnimation';
+            style.textContent = `
+                @keyframes radarScan {
+                    0% { transform: translate(-50%, -50%) rotate(0deg); }
+                    100% { transform: translate(-50%, -50%) rotate(360deg); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // Запускаем сканирование
+        startRadarScanning();
+    }
+    
+    // Запуск сканирования радара
+    function startRadarScanning() {
+        setInterval(() => {
+            scanForMages();
+        }, 2000); // Сканируем каждые 2 секунды
+    }
+    
+    // Сканирование магов
+    function scanForMages() {
+        const radarContainer = document.getElementById('magicRadar');
+        if (!radarContainer) return;
+        
+        // Удаляем старые точки магов
+        const oldMagePoints = radarContainer.querySelectorAll('.magePoint');
+        oldMagePoints.forEach(point => point.remove());
+        
+        // Получаем список игроков
+        const players = Array.from(networkSimulation.players.values());
+        let nearestMage = null;
+        let minDistance = Infinity;
+        
+        players.forEach((player, index) => {
+            // Случайное местоположение на радаре
+            const angle = Math.random() * Math.PI * 2;
+            const distance = Math.random() * 80 + 20; // 20-100px от центра
+            const x = Math.cos(angle) * distance;
+            const y = Math.sin(angle) * distance;
+            
+            // Создаем точку мага
+            const magePoint = document.createElement('div');
+            magePoint.className = 'magePoint';
+            magePoint.style.cssText = `
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(calc(-50% + ${x}px), calc(-50% + ${y}px));
+                width: 6px;
+                height: 6px;
+                background: radial-gradient(circle, #FFD700, #FFA500);
+                border-radius: 50%;
+                box-shadow: 0 0 8px #FFD700;
+                animation: magePointPulse 2s ease-in-out infinite;
+                cursor: pointer;
+            `;
+            
+            // Добавляем информацию о маге при наведении
+            magePoint.title = `${player.name} (Уровень ${player.level})`;
+            
+            // Обработчик клика для создания портала
+            magePoint.addEventListener('click', () => {
+                createPortalToMage(player);
+            });
+            
+            radarContainer.appendChild(magePoint);
+            
+            // Проверяем ближайшего мага
+            if (distance < minDistance) {
+                minDistance = distance;
+                nearestMage = player;
+            }
+        });
+        
+        // Обновляем информацию
+        const detectedMagesElement = document.getElementById('detectedMages');
+        const nearestMageElement = document.getElementById('nearestMage');
+        
+        if (detectedMagesElement) {
+            detectedMagesElement.textContent = players.length;
+        }
+        
+        if (nearestMageElement && nearestMage) {
+            nearestMageElement.textContent = `${nearestMage.name} (${Math.round(minDistance)}px)`;
+        }
+        
+        // Добавляем CSS анимацию для точек магов
+        if (!document.getElementById('magePointPulseAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'magePointPulseAnimation';
+            style.textContent = `
+                @keyframes magePointPulse {
+                    0%, 100% { 
+                        transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1);
+                        opacity: 1;
+                    }
+                    50% { 
+                        transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1.5);
+                        opacity: 0.7;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+    
+    // СИСТЕМА ПРОБИВАНИЯ ДЫР В РЕАЛЬНОСТИ
+    
+    // Создание системы пробивания дыр
+    function createRealityPunchHole() {
+        // Добавляем клавишу для пробивания дыр
+        document.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'p') {
+                e.preventDefault();
+                punchRealityHole();
+            }
+        });
+        
+        // Добавляем кнопку пробивания дыр
+        const punchButton = document.createElement('button');
+        punchButton.id = 'punchRealityButton';
+        punchButton.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #FF0000, #8B0000);
+            border: 3px solid #FFD700;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 9999;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+            animation: punchButtonPulse 2s ease-in-out infinite;
+        `;
+        punchButton.textContent = '👊';
+        punchButton.title = 'Пробить дыру в реальности (P)';
+        
+        punchButton.addEventListener('click', punchRealityHole);
+        
+        document.body.appendChild(punchButton);
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('punchButtonPulseAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'punchButtonPulseAnimation';
+            style.textContent = `
+                @keyframes punchButtonPulse {
+                    0%, 100% { 
+                        transform: scale(1);
+                        box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+                    }
+                    50% { 
+                        transform: scale(1.1);
+                        box-shadow: 0 0 30px rgba(255, 0, 0, 0.8);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+    
+    // Пробивание дыры в реальности
+    function punchRealityHole() {
+        showMagicInfo("💥 ПРОБИВАНИЕ ДЫРЫ В РЕАЛЬНОСТИ! 💥");
+        
+        // Создаем эффект пробивания
+        const punchContainer = document.createElement('div');
+        punchContainer.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9998;
+        `;
+        
+        // Создаем трещины в реальности
+        for (let i = 0; i < 20; i++) {
+            const crack = document.createElement('div');
+            crack.style.cssText = `
+                position: absolute;
+                width: ${Math.random() * 400 + 100}px;
+                height: 3px;
+                background: linear-gradient(90deg, 
+                    transparent, 
+                    #FF0000, 
+                    #FFD700, 
+                    #FF0000, 
+                    transparent);
+                left: ${Math.random() * 100}%;
+                top: ${Math.random() * 100}%;
+                transform: rotate(${Math.random() * 360}deg);
+                animation: realityCrackAnimation 4s ease-out forwards;
+                animation-delay: ${Math.random() * 2}s;
+                box-shadow: 0 0 15px #FF0000;
+            `;
+            
+            punchContainer.appendChild(crack);
+        }
+        
+        // Создаем дыру в центре
+        const realityHole = document.createElement('div');
+        realityHole.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, 
+                rgba(0, 0, 0, 0.9) 0%, 
+                rgba(255, 0, 0, 0.3) 30%, 
+                rgba(255, 215, 0, 0.2) 60%, 
+                transparent 100%);
+            border-radius: 50%;
+            animation: realityHoleAnimation 5s ease-out forwards;
+            box-shadow: 0 0 50px #FF0000, inset 0 0 30px #000000;
+        `;
+        
+        punchContainer.appendChild(realityHole);
+        
+        // Создаем портал в дыре
+        setTimeout(() => {
+            createDimensionalPortal();
+        }, 2000);
+        
+        // Добавляем CSS анимации
+        if (!document.getElementById('realityCrackAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'realityCrackAnimation';
+            style.textContent = `
+                @keyframes realityCrackAnimation {
+                    0% { 
+                        opacity: 0; 
+                        transform: rotate(var(--rotation)) scaleX(0);
+                    }
+                    30% { 
+                        opacity: 1; 
+                        transform: rotate(var(--rotation)) scaleX(1);
+                    }
+                    70% { 
+                        opacity: 1; 
+                        transform: rotate(var(--rotation)) scaleX(1.2);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: rotate(var(--rotation)) scaleX(0.5);
+                    }
+                }
+                @keyframes realityHoleAnimation {
+                    0% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) scale(0) rotate(0deg);
+                    }
+                    20% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1) rotate(90deg);
+                    }
+                    80% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1.2) rotate(270deg);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) scale(1.5) rotate(360deg);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(punchContainer);
+        
+        setTimeout(() => {
+            if (punchContainer.parentNode) {
+                punchContainer.parentNode.removeChild(punchContainer);
+            }
+        }, 5000);
+    }
+    
+    // Создание портала к магу
+    function createPortalToMage(mage) {
+        showMagicInfo(`🌀 ПОРТАЛ К ${mage.name.toUpperCase()}! 🌀`);
+        
+        const portalContainer = document.createElement('div');
+        portalContainer.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 400px;
+            pointer-events: none;
+            z-index: 9998;
+            animation: portalAnimation 6s ease-out forwards;
+        `;
+        
+        // Создаем портал
+        const portal = document.createElement('div');
+        portal.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, 
+                rgba(138, 43, 226, 0.8) 0%, 
+                rgba(75, 0, 130, 0.6) 30%, 
+                rgba(0, 0, 0, 0.9) 60%, 
+                rgba(255, 255, 255, 0.1) 100%);
+            border-radius: 50%;
+            animation: portalCore 2s ease-in-out infinite;
+            box-shadow: 0 0 50px #8A2BE2, inset 0 0 30px #000000;
+        `;
+        
+        portalContainer.appendChild(portal);
+        
+        // Создаем спиральные частицы портала
+        for (let i = 0; i < 100; i++) {
+            const particle = document.createElement('div');
+            particle.style.cssText = `
+                position: absolute;
+                width: ${Math.random() * 8 + 2}px;
+                height: ${Math.random() * 8 + 2}px;
+                background: radial-gradient(circle, #8A2BE2, #4B0082, transparent);
+                border-radius: 50%;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                animation: portalParticle ${Math.random() * 4 + 3}s linear infinite;
+                animation-delay: ${Math.random() * 3}s;
+                box-shadow: 0 0 10px #8A2BE2;
+            `;
+            
+            particle.style.setProperty('--orbit-radius', (150 + Math.random() * 50) + 'px');
+            particle.style.setProperty('--orbit-angle', (Math.random() * 360) + 'deg');
+            
+            portalContainer.appendChild(particle);
+        }
+        
+        // Показываем информацию о маге
+        const mageInfo = document.createElement('div');
+        mageInfo.style.cssText = `
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 10px;
+            border: 2px solid #8A2BE2;
+        `;
+        mageInfo.innerHTML = `
+            <div style="color: #8A2BE2;">🌀 ПОРТАЛ К МАГУ 🌀</div>
+            <div style="color: #FFD700;">${mage.name}</div>
+            <div style="color: #00FFFF;">Уровень: ${mage.level}</div>
+        `;
+        
+        portalContainer.appendChild(mageInfo);
+        
+        // Добавляем CSS анимации
+        if (!document.getElementById('portalAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'portalAnimation';
+            style.textContent = `
+                @keyframes portalAnimation {
+                    0% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) scale(0) rotate(0deg);
+                    }
+                    20% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1) rotate(90deg);
+                    }
+                    80% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1.1) rotate(270deg);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) scale(1.3) rotate(360deg);
+                    }
+                }
+                @keyframes portalCore {
+                    0%, 100% { 
+                        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+                    }
+                    50% { 
+                        transform: translate(-50%, -50%) scale(1.1) rotate(180deg);
+                    }
+                }
+                @keyframes portalParticle {
+                    0% { 
+                        transform: translate(-50%, -50%) rotate(var(--orbit-angle)) translateX(var(--orbit-radius)) rotate(calc(-1 * var(--orbit-angle)));
+                        opacity: 1;
+                    }
+                    100% { 
+                        transform: translate(-50%, -50%) rotate(calc(var(--orbit-angle) + 720deg)) translateX(var(--orbit-radius)) rotate(calc(-1 * var(--orbit-angle) - 720deg));
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(portalContainer);
+        
+        setTimeout(() => {
+            if (portalContainer.parentNode) {
+                portalContainer.parentNode.removeChild(portalContainer);
+            }
+        }, 6000);
+    }
+    
+    // Создание межпространственного портала
+    function createDimensionalPortal() {
+        const dimensionalPortal = document.createElement('div');
+        dimensionalPortal.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            height: 500px;
+            pointer-events: none;
+            z-index: 9998;
+            animation: dimensionalPortalAnimation 8s ease-out forwards;
+        `;
+        
+        // Создаем многослойный портал
+        for (let layer = 0; layer < 5; layer++) {
+            const portalLayer = document.createElement('div');
+            portalLayer.style.cssText = `
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: ${400 - layer * 60}px;
+                height: ${400 - layer * 60}px;
+                border: 2px solid ${['#FF0000', '#FFD700', '#00FF00', '#00FFFF', '#8A2BE2'][layer]};
+                border-radius: 50%;
+                animation: portalLayerAnimation ${3 + layer}s linear infinite;
+                animation-delay: ${layer * 0.5}s;
+                box-shadow: 0 0 20px ${['#FF0000', '#FFD700', '#00FF00', '#00FFFF', '#8A2BE2'][layer]};
+            `;
+            
+            dimensionalPortal.appendChild(portalLayer);
+        }
+        
+        // Добавляем CSS анимации
+        if (!document.getElementById('dimensionalPortalAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'dimensionalPortalAnimation';
+            style.textContent = `
+                @keyframes dimensionalPortalAnimation {
+                    0% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) scale(0) rotate(0deg);
+                    }
+                    20% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1) rotate(90deg);
+                    }
+                    80% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1.2) rotate(270deg);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) scale(1.5) rotate(360deg);
+                    }
+                }
+                @keyframes portalLayerAnimation {
+                    0% { 
+                        transform: translate(-50%, -50%) rotate(0deg);
+                    }
+                    100% { 
+                        transform: translate(-50%, -50%) rotate(360deg);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(dimensionalPortal);
+        
+        setTimeout(() => {
+            if (dimensionalPortal.parentNode) {
+                dimensionalPortal.parentNode.removeChild(dimensionalPortal);
+            }
+        }, 8000);
+    }
+    
+    // МОБИЛЬНАЯ ОПТИМИЗАЦИЯ И СЕНСОРНОЕ УПРАВЛЕНИЕ
+    
+    // Инициализация мобильной оптимизации
+    function initializeMobileOptimization() {
+        console.log('📱 Мобильная оптимизация активирована!');
+        
+        // Создаем мобильный интерфейс
+        createMobileMagicInterface();
+        
+        // Добавляем жестовую магию
+        initializeGestureMagic();
+        
+        // Оптимизируем существующие элементы
+        optimizeForMobile();
+        
+        // Показываем мобильные подсказки
+        showMobileTips();
+    }
+    
+    // Создание мобильного магического интерфейса
+    function createMobileMagicInterface() {
+        // Создаем контейнер для мобильных кнопок
+        const mobileContainer = document.createElement('div');
+        mobileContainer.id = 'mobileMagicContainer';
+        mobileContainer.style.cssText = `
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.9));
+            padding: 20px 10px 10px 10px;
+            z-index: 10000;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        `;
+        
+        // Создаем кнопки для основных магических эффектов
+        const magicButtons = [
+            { key: 'f', name: '🔥', effect: 'Огненный шторм', color: '#FF4500' },
+            { key: 'w', name: '💧', effect: 'Водоворот', color: '#00BFFF' },
+            { key: 'e', name: '🌍', effect: 'Землетрясение', color: '#8B4513' },
+            { key: 'a', name: '💨', effect: 'Ветряной торнадо', color: '#87CEEB' },
+            { key: 'i', name: '❄️', effect: 'Ледниковый период', color: '#B0E0E6' },
+            { key: 't', name: '⚡', effect: 'Грозовой шторм', color: '#FFD700' },
+            { key: 'b', name: '🕳️', effect: 'Черная дыра', color: '#000000' },
+            { key: 'n', name: '🌌', effect: 'Туманность', color: '#8A2BE2' },
+            { key: '1', name: '⏰', effect: 'Остановка времени', color: '#00FFFF' },
+            { key: '2', name: '⚡', effect: 'Ускорение времени', color: '#FFD700' },
+            { key: 'r', name: '🌈', effect: 'Радуга', color: '#FF69B4' },
+            { key: 'l', name: '⚡', effect: 'Молния', color: '#FFFF00' }
+        ];
+        
+        magicButtons.forEach(button => {
+            const magicButton = document.createElement('button');
+            magicButton.className = 'mobileMagicButton';
+            magicButton.style.cssText = `
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                border: 3px solid ${button.color};
+                background: radial-gradient(circle, ${button.color}, rgba(0, 0, 0, 0.8));
+                color: white;
+                font-size: 24px;
+                font-weight: bold;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+                transition: all 0.3s ease;
+                user-select: none;
+                -webkit-user-select: none;
+                -webkit-tap-highlight-color: transparent;
+            `;
+            
+            magicButton.textContent = button.name;
+            magicButton.title = button.effect;
+            
+            // Добавляем эффекты при нажатии
+            magicButton.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                magicButton.style.transform = 'scale(0.9)';
+                magicButton.style.boxShadow = `0 2px 10px ${button.color}`;
+            });
+            
+            magicButton.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                magicButton.style.transform = 'scale(1)';
+                magicButton.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.3)';
+                
+                // Запускаем магический эффект
+                triggerMobileMagic(button.key);
+            });
+            
+            // Также добавляем поддержку клика мышью
+            magicButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                triggerMobileMagic(button.key);
+            });
+            
+            mobileContainer.appendChild(magicButton);
+            mobileUI.magicButtons.push(magicButton);
+        });
+        
+        // Кнопка случайной магии
+        const randomMagicButton = document.createElement('button');
+        randomMagicButton.style.cssText = `
+            width: 80px;
+            height: 60px;
+            border-radius: 30px;
+            border: 3px solid #FFD700;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #000;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+            transition: all 0.3s ease;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        `;
+        randomMagicButton.textContent = '🎲 СЛУЧАЙНО';
+        randomMagicButton.title = 'Случайная магия';
+        
+        randomMagicButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            randomMagicButton.style.transform = 'scale(0.9)';
+        });
+        
+        randomMagicButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            randomMagicButton.style.transform = 'scale(1)';
+            performMagic();
+        });
+        
+        randomMagicButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            performMagic();
+        });
+        
+        mobileContainer.appendChild(randomMagicButton);
+        
+        // Кнопка пробивания дыр
+        const punchButton = document.createElement('button');
+        punchButton.style.cssText = `
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid #FF0000;
+            background: radial-gradient(circle, #FF0000, #8B0000);
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        `;
+        punchButton.textContent = '👊';
+        punchButton.title = 'Пробить дыру в реальности';
+        
+        punchButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            punchButton.style.transform = 'scale(0.9)';
+        });
+        
+        punchButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            punchButton.style.transform = 'scale(1)';
+            punchRealityHole();
+        });
+        
+        punchButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            punchRealityHole();
+        });
+        
+        mobileContainer.appendChild(punchButton);
+        
+        document.body.appendChild(mobileContainer);
+    }
+    
+    // Запуск магии с мобильной кнопки
+    function triggerMobileMagic(key) {
+        const magicKeys = {
+            'f': () => createFireStorm(),
+            'w': () => createWaterWhirlpool(),
+            'e': () => createEarthquake(),
+            'a': () => createWindTornado(),
+            'i': () => createIceAge(),
+            't': () => createThunderStorm(),
+            'b': () => createBlackHole(),
+            'n': () => createNebula(),
+            '1': () => createTimeStop(),
+            '2': () => createTimeAcceleration(),
+            'r': () => createRainbow(),
+            'l': () => createLightning()
+        };
+        
+        if (magicKeys[key]) {
+            magicKeys[key]();
+            showMagicInfo(`Мобильная магия: ${getEffectNameByKey(key)}`);
+            
+            // Отправляем магию другим игрокам
+            const effectName = getEffectNameByKey(key);
+            if (effectName) {
+                sendMagicToPlayers({ name: effectName });
+            }
+            
+            // Создаем визуальную обратную связь
+            createMobileMagicFeedback(key);
+        }
+    }
+    
+    // Создание визуальной обратной связи для мобильных
+    function createMobileMagicFeedback(key) {
+        const feedback = document.createElement('div');
+        feedback.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 10001;
+            border: 2px solid #00FF00;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+            animation: mobileFeedbackAnimation 2s ease-out forwards;
+        `;
+        
+        feedback.textContent = `✨ ${getEffectNameByKey(key)} ✨`;
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('mobileFeedbackAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'mobileFeedbackAnimation';
+            style.textContent = `
+                @keyframes mobileFeedbackAnimation {
+                    0% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) scale(0.5);
+                    }
+                    20% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1.1);
+                    }
+                    80% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) scale(0.8);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(feedback);
+        
+        setTimeout(() => {
+            if (feedback.parentNode) {
+                feedback.parentNode.removeChild(feedback);
+            }
+        }, 2000);
+    }
+    
+    // Инициализация жестовой магии
+    function initializeGestureMagic() {
+        let startX, startY, startTime;
+        
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                startTime = Date.now();
+                mobileUI.gestureMagic.gestureStartTime = startTime;
+            }
+        });
+        
+        document.addEventListener('touchend', (e) => {
+            if (!startX || !startY) return;
+            
+            const endX = e.changedTouches[0].clientX;
+            const endY = e.changedTouches[0].clientY;
+            const endTime = Date.now();
+            
+            const deltaX = endX - startX;
+            const deltaY = endY - startY;
+            const deltaTime = endTime - startTime;
+            
+            // Определяем жест
+            const gesture = detectGesture(deltaX, deltaY, deltaTime);
+            
+            if (gesture) {
+                executeGestureMagic(gesture);
+            }
+            
+            // Сбрасываем значения
+            startX = startY = null;
+        });
+    }
+    
+    // Определение жеста
+    function detectGesture(deltaX, deltaY, deltaTime) {
+        const minDistance = 50;
+        const maxTime = 1000;
+        
+        if (deltaTime > maxTime) return null;
+        
+        const absX = Math.abs(deltaX);
+        const absY = Math.abs(deltaY);
+        
+        if (absX < minDistance && absY < minDistance) {
+            return 'tap'; // Обычное касание
+        }
+        
+        if (absX > absY) {
+            return deltaX > 0 ? 'swipeRight' : 'swipeLeft';
+        } else {
+            return deltaY > 0 ? 'swipeDown' : 'swipeUp';
+        }
+    }
+    
+    // Выполнение жестовой магии
+    function executeGestureMagic(gesture) {
+        const gestureEffects = {
+            'tap': () => createMagicExplosion(),
+            'swipeUp': () => createWindTornado(),
+            'swipeDown': () => createEarthquake(),
+            'swipeLeft': () => createFireStorm(),
+            'swipeRight': () => createWaterWhirlpool()
+        };
+        
+        if (gestureEffects[gesture]) {
+            gestureEffects[gesture]();
+            showMagicInfo(`Жестовая магия: ${gesture}`);
+            
+            // Создаем визуальную обратную связь для жеста
+            createGestureFeedback(gesture);
+        }
+    }
+    
+    // Создание визуальной обратной связи для жестов
+    function createGestureFeedback(gesture) {
+        const feedback = document.createElement('div');
+        feedback.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 10001;
+            border: 2px solid #FF69B4;
+            box-shadow: 0 0 20px rgba(255, 105, 180, 0.5);
+            animation: gestureFeedbackAnimation 3s ease-out forwards;
+        `;
+        
+        const gestureNames = {
+            'tap': '👆 Касание',
+            'swipeUp': '⬆️ Свайп вверх',
+            'swipeDown': '⬇️ Свайп вниз',
+            'swipeLeft': '⬅️ Свайп влево',
+            'swipeRight': '➡️ Свайп вправо'
+        };
+        
+        feedback.textContent = `🎭 ${gestureNames[gesture] || gesture}`;
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('gestureFeedbackAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'gestureFeedbackAnimation';
+            style.textContent = `
+                @keyframes gestureFeedbackAnimation {
+                    0% { 
+                        opacity: 0; 
+                        transform: translateX(-50%) translateY(-20px);
+                    }
+                    20% { 
+                        opacity: 1; 
+                        transform: translateX(-50%) translateY(0px);
+                    }
+                    80% { 
+                        opacity: 1; 
+                        transform: translateX(-50%) translateY(0px);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: translateX(-50%) translateY(-20px);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(feedback);
+        
+        setTimeout(() => {
+            if (feedback.parentNode) {
+                feedback.parentNode.removeChild(feedback);
+            }
+        }, 3000);
+    }
+    
+    // Оптимизация существующих элементов для мобильных
+    function optimizeForMobile() {
+        // Увеличиваем размеры элементов для мобильных
+        const multiplayerPanel = document.getElementById('multiplayerPanel');
+        if (multiplayerPanel) {
+            multiplayerPanel.style.fontSize = '14px';
+            multiplayerPanel.style.padding = '20px';
+            multiplayerPanel.style.minWidth = '280px';
+        }
+        
+        // Оптимизируем чат для мобильных
+        const magicChat = document.getElementById('magicChat');
+        if (magicChat) {
+            magicChat.style.width = '90vw';
+            magicChat.style.height = '250px';
+            magicChat.style.left = '5vw';
+            magicChat.style.bottom = '120px'; // Поднимаем над мобильными кнопками
+        }
+        
+        // Оптимизируем радар для мобильных
+        const magicRadar = document.getElementById('magicRadar');
+        if (magicRadar) {
+            magicRadar.style.width = '150px';
+            magicRadar.style.height = '150px';
+            magicRadar.style.top = '10px';
+            magicRadar.style.left = '10px';
+        }
+        
+        // Убираем кнопку пробивания дыр (она теперь в мобильном интерфейсе)
+        const punchButton = document.getElementById('punchRealityButton');
+        if (punchButton) {
+            punchButton.style.display = 'none';
+        }
+    }
+    
+    // Показ мобильных подсказок
+    function showMobileTips() {
+        const mobileTips = document.createElement('div');
+        mobileTips.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            text-align: center;
+            z-index: 10002;
+            border: 3px solid #00FF00;
+            box-shadow: 0 0 40px rgba(0, 255, 0, 0.5);
+            max-width: 90vw;
+            animation: mobileTipsAnimation 8s ease-in-out forwards;
+        `;
+        
+        mobileTips.innerHTML = `
+            <div style="color: #00FF00; font-weight: bold; font-size: 20px; margin-bottom: 20px;">
+                📱 МОБИЛЬНАЯ МАГИЯ АКТИВИРОВАНА! 📱
+            </div>
+            <div style="margin-bottom: 15px;">
+                <div style="color: #FFD700; font-weight: bold;">🎮 УПРАВЛЕНИЕ:</div>
+                <div>• Кнопки внизу экрана - быстрая магия</div>
+                <div>• Касание экрана - магический взрыв</div>
+                <div>• Свайп вверх - ветряной торнадо</div>
+                <div>• Свайп вниз - землетрясение</div>
+                <div>• Свайп влево - огненный шторм</div>
+                <div>• Свайп вправо - водоворот</div>
+            </div>
+            <div style="color: #00FFFF; font-weight: bold;">
+                Наслаждайтесь магией на мобильном! ✨
+            </div>
+        `;
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('mobileTipsAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'mobileTipsAnimation';
+            style.textContent = `
+                @keyframes mobileTipsAnimation {
+                    0% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) scale(0.8);
+                    }
+                    20% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1.05);
+                    }
+                    80% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) scale(1);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) scale(0.9);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(mobileTips);
+        
+        setTimeout(() => {
+            if (mobileTips.parentNode) {
+                mobileTips.parentNode.removeChild(mobileTips);
             }
         }, 8000);
     }
