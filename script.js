@@ -2563,7 +2563,26 @@ document.addEventListener('DOMContentLoaded', function() {
             '🌺 Магический сад!',
             '🌀 Реальность искажена!',
             '🐲 МЕГА-ЗВЕРЬ!',
-            '♾️ БЕСКОНЕЧНАЯ МАГИЯ!'
+            '♾️ БЕСКОНЕЧНАЯ МАГИЯ!',
+            '💥 ХАОТИЧЕСКОЕ ЦАРСТВО!',
+            '🌌 ВСЕЛЕННАЯ СОЗДАНА!',
+            '⏰ ВРЕМЕННОЙ ПАРАДОКС!',
+            '⚡ БОГИ ПРИЗВАНЫ!',
+            '🌌 МУЛЬТИВСЕЛЕННАЯ!',
+            '💥 РЕАЛЬНОСТЬ СЛОМАНА!',
+            '🔥 МАГИЧЕСКИЙ АПОКАЛИПСИС!',
+            '👁️ ДРЕВНИЕ УЖАСЫ!',
+            '🌀 КОЛЛАПС ИЗМЕРЕНИЙ!',
+            '🌌 КОСМИЧЕСКИЕ СУЩНОСТИ!',
+            '💥 БОЛЬШОЙ ВЗРЫВ!',
+            '🐉 БЕСКОНЕЧНЫЕ ДРАКОНЫ!',
+            '💥 ГЛИТЧ РЕАЛЬНОСТИ!',
+            '🕳️ ЧЕРНАЯ ДЫРА!',
+            '💀 КОНЕЦ ВСЕЛЕННОЙ!',
+            '⚡ ПЕРВОБЫТНЫЕ СИЛЫ!',
+            '🌀 МАГИЧЕСКАЯ СИНГУЛЯРНОСТЬ!',
+            '🌀 ИСКАЖЕНИЕ РЕАЛЬНОСТИ!',
+            '💥 УЛЬТИМАТИВНЫЙ ХАОС!'
         ];
         
         const resultText = results[Math.floor(Math.random() * results.length)];
@@ -3457,6 +3476,357 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         @keyframes infiniteSpin {
+            0% { 
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+            100% { 
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+        
+        @keyframes chaosFloat {
+            0%, 100% { 
+                transform: translate(0px, 0px) rotate(0deg);
+                opacity: 0.3;
+            }
+            50% { 
+                transform: translate(${(Math.random() - 0.5) * 100}px, ${(Math.random() - 0.5) * 100}px) rotate(180deg);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes chaosSpin {
+            0% { 
+                transform: rotate(0deg) scale(1);
+            }
+            100% { 
+                transform: rotate(360deg) scale(${0.5 + Math.random() * 1.5});
+            }
+        }
+        
+        @keyframes universeExpand {
+            0% { 
+                transform: scale(0);
+                opacity: 0;
+            }
+            100% { 
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes starBirth {
+            0% { 
+                transform: scale(0);
+                opacity: 0;
+            }
+            50% { 
+                transform: scale(1.5);
+                opacity: 1;
+            }
+            100% { 
+                transform: scale(1);
+                opacity: 0.8;
+            }
+        }
+        
+        @keyframes timeLoop {
+            0% { 
+                transform: translate(-50%, -50%) rotate(0deg) scale(0);
+                opacity: 1;
+            }
+            100% { 
+                transform: translate(-50%, -50%) rotate(360deg) scale(1);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes timeParadox {
+            0%, 100% { 
+                transform: rotate(0deg);
+                opacity: 0.1;
+            }
+            50% { 
+                transform: rotate(180deg);
+                opacity: 0.3;
+            }
+        }
+        
+        @keyframes godSummon {
+            0% { 
+                transform: scale(0) translateY(100px);
+                opacity: 0;
+            }
+            50% { 
+                transform: scale(1.2) translateY(-20px);
+                opacity: 1;
+            }
+            100% { 
+                transform: scale(1) translateY(0px);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes divineGlow {
+            0%, 100% { 
+                opacity: 0.1;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.3;
+                transform: scale(1.1);
+            }
+        }
+        
+        @keyframes multiverseFloat {
+            0%, 100% { 
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.3;
+            }
+            50% { 
+                transform: translate(-50%, -50%) scale(1.1);
+                opacity: 0.6;
+            }
+        }
+        
+        @keyframes realityCrack {
+            0% { 
+                transform: scaleX(0);
+                opacity: 0;
+            }
+            100% { 
+                transform: scaleX(1);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes realityBreak {
+            0%, 100% { 
+                transform: translateX(0px);
+                opacity: 0.1;
+            }
+            50% { 
+                transform: translateX(10px);
+                opacity: 0.3;
+            }
+        }
+        
+        @keyframes apocalypseGlow {
+            0%, 100% { 
+                opacity: 0.2;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.4;
+                transform: scale(1.05);
+            }
+        }
+        
+        @keyframes eldritchFloat {
+            0%, 100% { 
+                transform: translate(0px, 0px) rotate(0deg);
+                opacity: 0.8;
+            }
+            50% { 
+                transform: translate(${(Math.random() - 0.5) * 50}px, ${(Math.random() - 0.5) * 50}px) rotate(180deg);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes horrorPulse {
+            0%, 100% { 
+                opacity: 0.2;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.4;
+                transform: scale(1.1);
+            }
+        }
+        
+        @keyframes dimensionCollapse {
+            0% { 
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            100% { 
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes cosmicEntity {
+            0%, 100% { 
+                transform: translate(0px, 0px) rotate(0deg);
+            }
+            25% { 
+                transform: translate(50px, -30px) rotate(90deg);
+            }
+            50% { 
+                transform: translate(-30px, -60px) rotate(180deg);
+            }
+            75% { 
+                transform: translate(40px, -20px) rotate(270deg);
+            }
+        }
+        
+        @keyframes bigBang {
+            0% { 
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 1;
+            }
+            100% { 
+                transform: translate(-50%, -50%) scale(10);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes bigBangParticle {
+            0% { 
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 1;
+            }
+            100% { 
+                transform: translate(-50%, -50%) translate(${(Math.random() - 0.5) * 1000}px, ${(Math.random() - 0.5) * 1000}px) scale(1);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes infiniteDragon {
+            0%, 100% { 
+                transform: translate(0px, 0px) rotate(0deg);
+            }
+            25% { 
+                transform: translate(100px, -50px) rotate(5deg);
+            }
+            50% { 
+                transform: translate(-50px, -100px) rotate(-5deg);
+            }
+            75% { 
+                transform: translate(80px, -30px) rotate(3deg);
+            }
+        }
+        
+        @keyframes realityGlitch {
+            0%, 100% { 
+                transform: translateX(0px);
+                opacity: 0.1;
+            }
+            50% { 
+                transform: translateX(${Math.random() * 10}px);
+                opacity: 0.3;
+            }
+        }
+        
+        @keyframes glitchBlock {
+            0% { 
+                transform: scale(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% { 
+                transform: scale(1) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes blackHoleSpin {
+            0% { 
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+            100% { 
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+        
+        @keyframes blackHoleSuck {
+            0% { 
+                transform: translate(0px, 0px);
+                opacity: 1;
+            }
+            100% { 
+                transform: translate(${(Math.random() - 0.5) * 200}px, ${(Math.random() - 0.5) * 200}px);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes universeEnd {
+            0% { 
+                opacity: 0;
+                transform: scale(1);
+            }
+            100% { 
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+        
+        @keyframes universeFragment {
+            0% { 
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+            100% { 
+                transform: scale(0) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes primordialForce {
+            0%, 100% { 
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+            50% { 
+                transform: scale(1.3) rotate(180deg);
+                opacity: 0.8;
+            }
+        }
+        
+        @keyframes singularityCollapse {
+            0% { 
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 1;
+            }
+            100% { 
+                transform: translate(-50%, -50%) scale(20);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes spaceTimeDistort {
+            0% { 
+                transform: translate(-50%, -50%) rotate(0deg);
+                opacity: 0.3;
+            }
+            100% { 
+                transform: translate(-50%, -50%) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes realityWarp {
+            0%, 100% { 
+                transform: rotate(0deg);
+                opacity: 0.1;
+            }
+            50% { 
+                transform: rotate(180deg);
+                opacity: 0.3;
+            }
+        }
+        
+        @keyframes warpFloat {
+            0%, 100% { 
+                transform: translate(0px, 0px) scale(1);
+                opacity: 0.2;
+            }
+            50% { 
+                transform: translate(${(Math.random() - 0.5) * 50}px, ${(Math.random() - 0.5) * 50}px) scale(1.2);
+                opacity: 0.6;
+            }
+        }
+        
+        @keyframes ultimateChaosSpin {
             0% { 
                 transform: translate(-50%, -50%) rotate(0deg);
             }
