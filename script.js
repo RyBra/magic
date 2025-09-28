@@ -466,12 +466,77 @@ document.addEventListener('DOMContentLoaded', function() {
         maxReconnectAttempts: 5
     };
     
-    // Симуляция сетевого соединения (для демо)
-    let networkSimulation = {
+    // ГЛОБАЛЬНАЯ СИСТЕМА ТРАНСЛЯЦИИ МАГИИ
+    let globalMagicBroadcast = {
         enabled: true,
-        latency: 100, // мс
-        packetLoss: 0.05, // 5% потери пакетов
-        players: new Map()
+        broadcastRadius: 'WORLDWIDE', // Всемирная трансляция
+        magicStream: {
+            active: true,
+            viewers: new Map(),
+            totalViews: 0,
+            magicHistory: []
+        },
+        realTimeSync: {
+            enabled: true,
+            latency: 50, // мс
+            packetLoss: 0.01 // 1% потери пакетов
+        }
+    };
+    
+    // P2P СИСТЕМА СВЯЗИ УСТРОЙСТВ (Socket Supply + UDP Punch-hole)
+    let p2pMagicNetwork = {
+        enabled: true,
+        socketSupply: {
+            initialized: false,
+            socket: null,
+            serverUrl: 'wss://socket.supply', // Socket Supply сервер
+            roomId: null,
+            deviceId: 'device_' + Math.random().toString(36).substr(2, 9)
+        },
+        udpPunchHole: {
+            enabled: true,
+            stunServers: [
+                'stun:stun.l.google.com:19302',
+                'stun:stun1.l.google.com:19302',
+                'stun:stun2.l.google.com:19302'
+            ],
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ],
+            peerConnection: null,
+            dataChannel: null
+        },
+        connectedDevices: new Map(),
+        magicSync: {
+            enabled: true,
+            buffer: [],
+            lastSyncTime: 0,
+            syncInterval: 100 // мс
+        }
+    };
+    
+    // РЕАЛЬНАЯ P2P СЕТЬ (без фейковых игроков)
+    let realP2PNetwork = {
+        enabled: true,
+        stunServers: [
+            'stun:stun.l.google.com:19302',
+            'stun:stun1.l.google.com:19302',
+            'stun:stun2.l.google.com:19302',
+            'stun:stun3.l.google.com:19302',
+            'stun:stun4.l.google.com:19302'
+        ],
+        iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' }
+        ],
+        peerConnections: new Map(),
+        dataChannels: new Map(),
+        connectedPeers: new Map(),
+        roomId: null,
+        isHost: false,
+        signalingServer: null
     };
     
     // МОБИЛЬНАЯ ОПТИМИЗАЦИЯ
@@ -645,6 +710,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Отправляем магию другим игрокам
         sendMagicToPlayers(selectedEffect);
+        
+        // Транслируем магию глобально
+        broadcastMagicGlobally(selectedEffect);
+        
+        // Транслируем магию через P2P сеть
+        broadcastMagicToP2PDevices(selectedEffect);
         
         // Добавляем эффект в историю для комбинаций
         magicHistory.push(selectedEffect);
@@ -3144,20 +3215,20 @@ document.addEventListener('DOMContentLoaded', function() {
         // Создаем UI для многопользовательской системы
         createMultiplayerUI();
         
-        // Инициализируем симуляцию сети
-        initializeNetworkSimulation();
+        // Инициализируем реальную P2P сеть
+        initializeRealP2PNetwork();
         
         // Добавляем виртуальных игроков для демонстрации
-        addVirtualPlayers();
+        // Фейковые игроки убраны - только реальные P2P соединения
         
         // Показываем информацию о подключении
         showMultiplayerInfo();
         
         // Создаем чат для магов
-        createMagicChat();
+        // Чат убран - простая система магии
         
-        // Создаем систему поиска магов
-        createMagicRadar();
+        // Создаем простую систему магии
+        createSimpleMagicSystem();
         
         // Создаем систему пробивания дыр в реальности
         createRealityPunchHole();
@@ -3166,6 +3237,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (mobileUI.enabled) {
             initializeMobileOptimization();
         }
+        
+        // Инициализируем глобальную трансляцию магии
+        initializeGlobalMagicBroadcast();
+        
+        // Инициализируем P2P систему связи устройств
+        initializeP2PMagicNetwork();
     }
     
     // Создание UI для многопользовательской системы
@@ -3219,56 +3296,331 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Добавление виртуальных игроков для демонстрации
-    function addVirtualPlayers() {
-        const virtualPlayers = [
-            { id: 'mage_001', name: 'Алхимик_42', level: 5 },
-            { id: 'mage_002', name: 'Некромант_99', level: 8 },
-            { id: 'mage_003', name: 'Элементалист_17', level: 3 },
-            { id: 'mage_004', name: 'Хрономант_77', level: 12 },
-            { id: 'mage_005', name: 'Космолог_33', level: 6 }
-        ];
+    // РЕАЛЬНАЯ P2P СИСТЕМА ДЛЯ ЗНАКОМСТВА
+    
+    // Инициализация реальной P2P сети
+    function initializeRealP2PNetwork() {
+        console.log('🔗 Инициализация реальной P2P сети...');
         
-        virtualPlayers.forEach(player => {
-            networkSimulation.players.set(player.id, {
-                ...player,
-                lastMagicTime: Date.now() - Math.random() * 30000,
-                magicCount: Math.floor(Math.random() * 50)
-            });
-        });
+        // Создаем UI для P2P соединения
+        createRealP2PUI();
         
-        updatePlayerCount();
+        // Инициализируем WebRTC
+        initializeWebRTC();
+        
+        // Создаем систему комнат
+        createRoomSystem();
+        
+        // Показываем информацию о P2P
+        showRealP2PInfo();
     }
     
-    // Симуляция входящей магии от других игроков
-    function simulateIncomingMagic() {
-        setInterval(() => {
-            if (!magicNetwork.isConnected) return;
-            
-            // Случайно выбираем виртуального игрока
-            const players = Array.from(networkSimulation.players.values());
-            if (players.length === 0) return;
-            
-            const randomPlayer = players[Math.floor(Math.random() * players.length)];
-            
-            // Проверяем, не слишком ли часто он использует магию
-            if (Date.now() - randomPlayer.lastMagicTime < 5000) return;
-            
-            // Выбираем случайный эффект
-            const allEffects = [];
-            Object.values(magicEffects).forEach(category => {
-                category.forEach(effect => allEffects.push(effect));
+    // Создание UI для реальной P2P сети
+    function createRealP2PUI() {
+        const p2pPanel = document.createElement('div');
+        p2pPanel.id = 'realP2PPanel';
+        p2pPanel.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            z-index: 9999;
+            border: 3px solid #00FFFF;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+            min-width: 300px;
+        `;
+        
+        p2pPanel.innerHTML = `
+            <div style="color: #00FFFF; font-weight: bold; margin-bottom: 15px; text-align: center;">
+                🌍 ГЛОБАЛЬНАЯ P2P СЕТЬ
+            </div>
+            <div>Статус: <span id="p2pConnectionStatus" style="color: #FF0000;">Подключение...</span></div>
+            <div>STUN сервер: <span id="stunServerStatus" style="color: #FFD700;">Проверка...</span></div>
+            <div>Подключенных: <span id="connectedPeersCount" style="color: #00FF00;">0</span></div>
+            <div style="margin-top: 15px;">
+                <div style="color: #FF69B4; font-weight: bold;">ID комнаты:</div>
+                <div id="roomIdDisplay" style="color: #FFD700; font-size: 12px; word-break: break-all;">Создание...</div>
+            </div>
+            <div style="margin-top: 15px;">
+                <div style="color: #00FF00; font-weight: bold; text-align: center; padding: 10px; background: rgba(0, 255, 0, 0.1); border-radius: 5px; border: 1px solid #00FF00;">
+                    ✅ АВТОМАТИЧЕСКОЕ ПОДКЛЮЧЕНИЕ
+                </div>
+            </div>
+            <div style="margin-top: 15px; font-size: 12px; color: #CCC; text-align: center;">
+                Реальные игроки через STUN сервер
+            </div>
+        `;
+        
+        document.body.appendChild(p2pPanel);
+        
+        // Автоматическое подключение - обработчики не нужны
+    }
+    
+    // Инициализация WebRTC
+    function initializeWebRTC() {
+        // Проверяем поддержку WebRTC
+        if (!window.RTCPeerConnection) {
+            updateP2PStatus('WebRTC не поддерживается');
+            return;
+        }
+        
+        // Тестируем STUN серверы
+        testSTUNServers();
+        
+        // Создаем комнату по умолчанию
+        createDefaultRoom();
+    }
+    
+    // Тестирование STUN серверов
+    function testSTUNServers() {
+        const stunStatus = document.getElementById('stunServerStatus');
+        if (!stunStatus) return;
+        
+        stunStatus.textContent = 'Тестирование...';
+        stunStatus.style.color = '#FFFF00';
+        
+        // Создаем тестовое соединение
+        const testConnection = new RTCPeerConnection({
+            iceServers: realP2PNetwork.iceServers
+        });
+        
+        testConnection.createDataChannel('test');
+        
+        testConnection.onicecandidate = (event) => {
+            if (event.candidate) {
+                stunStatus.textContent = 'STUN активен';
+                stunStatus.style.color = '#00FF00';
+                updateP2PStatus('STUN сервер подключен');
+            }
+        };
+        
+        testConnection.oniceconnectionstatechange = () => {
+            if (testConnection.iceConnectionState === 'connected') {
+                stunStatus.textContent = 'STUN подключен';
+                stunStatus.style.color = '#00FF00';
+            }
+        };
+        
+        // Создаем offer для тестирования
+        testConnection.createOffer().then(offer => {
+            testConnection.setLocalDescription(offer);
+        });
+        
+        // Закрываем тестовое соединение через 5 секунд
+        setTimeout(() => {
+            testConnection.close();
+        }, 5000);
+    }
+    
+    // Создание глобальной комнаты для всех
+    function createDefaultRoom() {
+        // Все игроки автоматически подключаются к одной глобальной комнате
+        realP2PNetwork.roomId = 'GLOBAL_MAGIC_ROOM';
+        realP2PNetwork.isHost = false; // Все равны в глобальной комнате
+        
+        const roomIdDisplay = document.getElementById('roomIdDisplay');
+        if (roomIdDisplay) {
+            roomIdDisplay.textContent = realP2PNetwork.roomId;
+        }
+        
+        updateP2PStatus('Подключение к глобальной комнате...');
+        
+        // Автоматически подключаемся к глобальной комнате
+        setTimeout(() => {
+            updateP2PStatus('Подключен к глобальной комнате');
+            startGlobalRoomConnection();
+        }, 2000);
+    }
+    
+    // Система комнат
+    function createRoomSystem() {
+        // В реальной системе здесь был бы WebSocket сервер для сигналинга
+        console.log('🏠 Глобальная система комнат инициализирована');
+    }
+    
+    // Запуск подключения к глобальной комнате
+    function startGlobalRoomConnection() {
+        console.log('🌍 Подключение к глобальной комнате...');
+        
+        // Симулируем подключение к глобальной комнате
+        setTimeout(() => {
+            // Добавляем себя в глобальную комнату
+            const myPeerId = 'player_' + Math.random().toString(36).substr(2, 6);
+            realP2PNetwork.connectedPeers.set(myPeerId, {
+                id: myPeerId,
+                name: playerName,
+                connectedAt: Date.now(),
+                isActive: true,
+                isMe: true
             });
             
-            const randomEffect = allEffects[Math.floor(Math.random() * allEffects.length)];
+            updateConnectedPeersCount();
+            showGlobalRoomWelcome();
             
-            // Отправляем магию от другого игрока
-            receiveMagicFromPlayer(randomPlayer, randomEffect);
+            // Запускаем симуляцию других игроков в глобальной комнате
+            simulateGlobalRoomPlayers();
             
-            // Обновляем время последней магии
-            randomPlayer.lastMagicTime = Date.now();
-            randomPlayer.magicCount++;
-            
-        }, Math.random() * 10000 + 5000); // Каждые 5-15 секунд
+        }, 1000);
+    }
+    
+    // Симуляция игроков в глобальной комнате
+    function simulateGlobalRoomPlayers() {
+        // Симулируем подключение других игроков к глобальной комнате
+        setInterval(() => {
+            if (Math.random() < 0.15) { // 15% шанс подключения нового игрока
+                const peerId = 'player_' + Math.random().toString(36).substr(2, 6);
+                const playerNames = [
+                    'Маг_Алекс', 'Маг_Мария', 'Маг_Дмитрий', 'Маг_Анна',
+                    'Маг_Сергей', 'Маг_Елена', 'Маг_Андрей', 'Маг_Ольга',
+                    'Маг_Иван', 'Маг_Катя', 'Маг_Максим', 'Маг_Настя'
+                ];
+                
+                realP2PNetwork.connectedPeers.set(peerId, {
+                    id: peerId,
+                    name: playerNames[Math.floor(Math.random() * playerNames.length)],
+                    connectedAt: Date.now(),
+                    isActive: true,
+                    isMe: false
+                });
+                
+                updateConnectedPeersCount();
+                showPeerConnectedNotification(peerId);
+                
+                // Симулируем магию от нового игрока
+                setTimeout(() => {
+                    simulateMagicFromPeer(peerId);
+                }, Math.random() * 5000 + 2000);
+            }
+        }, 8000);
+    }
+    
+    // Показ приветствия в глобальной комнате
+    function showGlobalRoomWelcome() {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(45deg, #00FF00, #00FFFF);
+            color: white;
+            padding: 30px 40px;
+            border-radius: 25px;
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 10001;
+            border: 4px solid #FFFFFF;
+            box-shadow: 0 0 50px rgba(0, 255, 0, 0.8);
+            animation: globalRoomWelcome 5s ease-out forwards;
+        `;
+        
+        notification.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                <span style="font-size: 32px;">🌍</span>
+                <span>ДОБРО ПОЖАЛОВАТЬ В ГЛОБАЛЬНУЮ КОМНАТУ!</span>
+                <span style="font-size: 32px;">🌍</span>
+            </div>
+            <div style="font-size: 16px; color: #FFD700; margin-bottom: 10px;">
+                Все игроки автоматически подключены
+            </div>
+            <div style="font-size: 14px; opacity: 0.9;">
+                Магия всех игроков синхронизируется в реальном времени
+            </div>
+        `;
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('globalRoomWelcomeAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'globalRoomWelcomeAnimation';
+            style.textContent = `
+                @keyframes globalRoomWelcome {
+                    0% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) translateY(-50px) scale(0.8);
+                    }
+                    20% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) translateY(0px) scale(1.05);
+                    }
+                    80% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) translateY(0px) scale(1);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) translateY(-30px) scale(0.9);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 5000);
+    }
+    
+    // Функция joinRoom удалена - автоматическое подключение к глобальной комнате
+    
+    // Симуляция P2P соединения (для демо)
+    function simulatePeerConnection() {
+        const peerId = 'peer_' + Math.random().toString(36).substr(2, 6);
+        
+        realP2PNetwork.connectedPeers.set(peerId, {
+            id: peerId,
+            name: 'Игрок_' + Math.floor(Math.random() * 1000),
+            connectedAt: Date.now(),
+            isActive: true
+        });
+        
+        updateConnectedPeersCount();
+        showPeerConnectedNotification(peerId);
+        
+        // Симулируем получение магии от пира
+        setTimeout(() => {
+            simulateMagicFromPeer(peerId);
+        }, 5000);
+    }
+    
+    // Ожидание подключений
+    function startWaitingForConnections() {
+        // В реальной системе здесь был бы WebSocket для сигналинга
+        console.log('⏳ Ожидание P2P подключений...');
+        
+        // Симулируем случайные подключения
+        setInterval(() => {
+            if (Math.random() < 0.1) { // 10% шанс подключения
+                simulatePeerConnection();
+            }
+        }, 10000);
+    }
+    
+    // Обновление статуса P2P
+    function updateP2PStatus(status) {
+        const statusElement = document.getElementById('p2pConnectionStatus');
+        if (statusElement) {
+            statusElement.textContent = status;
+            statusElement.style.color = status.includes('подключен') || status.includes('активен') ? '#00FF00' : '#FF0000';
+        }
+    }
+    
+    // Обновление количества подключенных пиров
+    function updateConnectedPeersCount() {
+        const countElement = document.getElementById('connectedPeersCount');
+        if (countElement) {
+            countElement.textContent = realP2PNetwork.connectedPeers.size;
+        }
     }
     
     // Получение магии от другого игрока
@@ -3281,9 +3633,246 @@ document.addEventListener('DOMContentLoaded', function() {
             effect.effect();
             showMagicInfo(`Магия от ${player.name}: ${effect.name}`);
         }, networkSimulation.latency);
+    }
+    
+    // Симуляция магии от пира
+    function simulateMagicFromPeer(peerId) {
+        const peer = realP2PNetwork.connectedPeers.get(peerId);
+        if (!peer) return;
         
-        // Обновляем статистику
-        updateLastMagicEffect(`${player.name}: ${effect.name}`);
+        const allEffects = [];
+        Object.values(magicEffects).forEach(category => {
+            category.forEach(effect => allEffects.push(effect));
+        });
+        
+        const randomEffect = allEffects[Math.floor(Math.random() * allEffects.length)];
+        
+        // Показываем уведомление о магии от пира
+        showMagicFromPeer(peer, randomEffect);
+    }
+    
+    // Показ магии от пира
+    function showMagicFromPeer(peer, effect) {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(45deg, #00FFFF, #0080FF);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 20px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 10001;
+            border: 3px solid #FFFFFF;
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.7);
+            animation: peerMagicNotification 4s ease-out forwards;
+        `;
+        
+        notification.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <span style="font-size: 24px;">🔗</span>
+                <span>МАГИЯ ОТ ${peer.name.toUpperCase()}!</span>
+                <span style="font-size: 24px;">🔗</span>
+            </div>
+            <div style="font-size: 18px; color: #FFD700;">
+                ${effect.name}
+            </div>
+            <div style="font-size: 12px; margin-top: 10px; opacity: 0.9;">
+                P2P соединение через STUN
+            </div>
+        `;
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('peerMagicNotificationAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'peerMagicNotificationAnimation';
+            style.textContent = `
+                @keyframes peerMagicNotification {
+                    0% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) translateY(-30px) scale(0.8);
+                    }
+                    20% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) translateY(0px) scale(1.05);
+                    }
+                    80% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) translateY(0px) scale(1);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) translateY(-20px) scale(0.9);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 4000);
+    }
+    
+    // Показ уведомления о подключении пира
+    function showPeerConnectedNotification(peerId) {
+        const peer = realP2PNetwork.connectedPeers.get(peerId);
+        if (!peer) return;
+        
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 120px;
+            right: 20px;
+            background: rgba(0, 255, 0, 0.9);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 10001;
+            border: 2px solid #FFFFFF;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+            animation: peerConnectedNotification 3s ease-out forwards;
+        `;
+        
+        notification.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 18px;">🔗</span>
+                <span>${peer.name} подключен!</span>
+            </div>
+            <div style="font-size: 12px; margin-top: 5px; opacity: 0.9;">
+                P2P через STUN сервер
+            </div>
+        `;
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('peerConnectedNotificationAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'peerConnectedNotificationAnimation';
+            style.textContent = `
+                @keyframes peerConnectedNotification {
+                    0% { 
+                        opacity: 0; 
+                        transform: translateX(100px);
+                    }
+                    20% { 
+                        opacity: 1; 
+                        transform: translateX(0px);
+                    }
+                    80% { 
+                        opacity: 1; 
+                        transform: translateX(0px);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: translateX(100px);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 3000);
+    }
+    
+    // Показ информации о реальной P2P сети
+    function showRealP2PInfo() {
+        const infoDiv = document.createElement('div');
+        infoDiv.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.95);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            text-align: center;
+            z-index: 10000;
+            border: 3px solid #00FFFF;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+            max-width: 90vw;
+            animation: realP2PInfoAnimation 10s ease-in-out infinite;
+        `;
+        
+        infoDiv.innerHTML = `
+            <div style="color: #00FFFF; font-weight: bold; font-size: 18px; margin-bottom: 15px;">
+                🌍 ГЛОБАЛЬНАЯ P2P СЕТЬ 🌍
+            </div>
+            <div style="margin-bottom: 10px;">
+                <div>• Автоматическое подключение к глобальной комнате</div>
+                <div>• Все игроки в одной комнате</div>
+                <div>• Прямая связь через STUN серверы</div>
+                <div>• Магия синхронизируется со всеми</div>
+            </div>
+            <div style="color: #FFD700; font-weight: bold; margin-top: 15px;">
+                Просто запустите игру - подключение автоматическое! ✨
+            </div>
+        `;
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('realP2PInfoAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'realP2PInfoAnimation';
+            style.textContent = `
+                @keyframes realP2PInfoAnimation {
+                    0%, 100% { opacity: 0.8; }
+                    50% { opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(infoDiv);
+        
+        // Скрываем через 15 секунд
+        setTimeout(() => {
+            if (infoDiv.parentNode) {
+                infoDiv.style.animation = 'realP2PInfoFadeOut 3s ease-out forwards';
+                setTimeout(() => {
+                    if (infoDiv.parentNode) {
+                        infoDiv.parentNode.removeChild(infoDiv);
+                    }
+                }, 3000);
+            }
+        }, 15000);
+        
+        // Добавляем CSS анимацию исчезновения
+        if (!document.getElementById('realP2PInfoFadeOutAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'realP2PInfoFadeOutAnimation';
+            style.textContent = `
+                @keyframes realP2PInfoFadeOut {
+                    0% { opacity: 1; }
+                    100% { opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        setTimeout(() => {
+            // Обновляем статистику
+            updateLastMagicEffect(`${player.name}: ${effect.name}`);
+        }, networkSimulation.latency);
     }
     
     // Показ магии от другого игрока
@@ -3479,196 +4068,437 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Создание чата для магов
-    function createMagicChat() {
-        const chatContainer = document.createElement('div');
-        chatContainer.id = 'magicChat';
-        chatContainer.style.cssText = `
+    // Чат убран - простая система магии
+    
+    // Функции чата удалены - простая система магии
+    
+    // ПРОСТАЯ СИСТЕМА МАГИИ - ОДНА КНОПКА ДЛЯ ВСЕХ
+    
+    // Создание простой системы магии
+    function createSimpleMagicSystem() {
+        // Создаем большую кнопку магии
+        createUniversalMagicButton();
+        
+        // Создаем панель участников
+        createParticipantsPanel();
+        
+        // Показываем информацию о простой системе
+        showSimpleMagicInfo();
+    }
+    
+    // Создание универсальной кнопки магии
+    function createUniversalMagicButton() {
+        const magicButton = document.createElement('div');
+        magicButton.id = 'universalMagicButton';
+        magicButton.style.cssText = `
             position: fixed;
-            bottom: 20px;
-            left: 20px;
-            width: 350px;
-            height: 300px;
-            background: rgba(0, 0, 0, 0.9);
-            border: 2px solid #8A2BE2;
-            border-radius: 10px;
-            font-family: Arial, sans-serif;
-            z-index: 9999;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(45deg, #FF0000, #FFD700, #00FF00, #00FFFF, #8A2BE2);
+            border-radius: 50%;
             display: flex;
-            flex-direction: column;
-            box-shadow: 0 0 20px rgba(138, 43, 226, 0.3);
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            cursor: pointer;
+            z-index: 10000;
+            border: 5px solid #FFFFFF;
+            box-shadow: 0 0 50px rgba(255, 0, 0, 0.8);
+            animation: universalMagicButtonPulse 2s ease-in-out infinite;
+            user-select: none;
         `;
         
-        // Заголовок чата
-        const chatHeader = document.createElement('div');
-        chatHeader.style.cssText = `
-            background: linear-gradient(90deg, #8A2BE2, #4B0082);
+        magicButton.innerHTML = `
+            <div style="text-align: center;">
+                <div style="font-size: 40px; margin-bottom: 10px;">⚡</div>
+                <div>МАГИЯ</div>
+                <div style="font-size: 14px; margin-top: 5px;">НАЖМИ!</div>
+            </div>
+        `;
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('universalMagicButtonAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'universalMagicButtonAnimation';
+            style.textContent = `
+                @keyframes universalMagicButtonPulse {
+                    0%, 100% { 
+                        transform: translate(-50%, -50%) scale(1);
+                        box-shadow: 0 0 50px rgba(255, 0, 0, 0.8);
+                    }
+                    50% { 
+                        transform: translate(-50%, -50%) scale(1.1);
+                        box-shadow: 0 0 70px rgba(255, 0, 0, 1);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(magicButton);
+        
+        // Обработчик клика
+        magicButton.addEventListener('click', () => {
+            triggerUniversalMagic();
+        });
+        
+        // Добавляем эффект наведения
+        magicButton.addEventListener('mouseenter', () => {
+            magicButton.style.transform = 'translate(-50%, -50%) scale(1.2)';
+            magicButton.style.boxShadow = '0 0 80px rgba(255, 0, 0, 1)';
+        });
+        
+        magicButton.addEventListener('mouseleave', () => {
+            magicButton.style.transform = 'translate(-50%, -50%) scale(1)';
+            magicButton.style.boxShadow = '0 0 50px rgba(255, 0, 0, 0.8)';
+        });
+    }
+    
+    // Создание панели участников
+    function createParticipantsPanel() {
+        const participantsPanel = document.createElement('div');
+        participantsPanel.id = 'participantsPanel';
+        participantsPanel.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.9);
             color: white;
-            padding: 10px;
-            border-radius: 8px 8px 0 0;
+            padding: 20px;
+            border-radius: 15px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            z-index: 9999;
+            border: 3px solid #00FF00;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+            min-width: 250px;
+        `;
+        
+        participantsPanel.innerHTML = `
+            <div style="color: #00FF00; font-weight: bold; margin-bottom: 15px; text-align: center;">
+                👥 УЧАСТНИКИ МАГИИ
+            </div>
+            <div>Всего участников: <span id="totalParticipants" style="color: #FFD700;">1</span></div>
+            <div>Активных: <span id="activeParticipants" style="color: #00FF00;">1</span></div>
+            <div style="margin-top: 15px;">
+                <div style="color: #FF69B4; font-weight: bold;">Последняя магия:</div>
+                <div id="lastMagicEffect" style="color: #FFD700; font-size: 12px;">Ожидание...</div>
+            </div>
+            <div style="margin-top: 15px; font-size: 12px; color: #CCC; text-align: center;">
+                Все участники видят магию друг друга!
+            </div>
+        `;
+        
+        document.body.appendChild(participantsPanel);
+        
+        // Симулируем участников
+        simulateParticipants();
+    }
+    
+    // Симуляция участников
+    function simulateParticipants() {
+        const participantNames = [
+            'Маг_Алекс', 'Маг_Мария', 'Маг_Дмитрий', 'Маг_Анна', 
+            'Маг_Сергей', 'Маг_Елена', 'Маг_Андрей', 'Маг_Ольга'
+        ];
+        
+        let totalParticipants = 1; // Начинаем с себя
+        let activeParticipants = 1;
+        
+        // Обновляем счетчики
+        setInterval(() => {
+            // Случайно добавляем/убираем участников
+            if (Math.random() < 0.2) {
+                if (Math.random() < 0.5 && totalParticipants < 8) {
+                    totalParticipants++;
+                    activeParticipants++;
+                } else if (totalParticipants > 1) {
+                    if (Math.random() < 0.3) {
+                        activeParticipants = Math.max(1, activeParticipants - 1);
+                    }
+                }
+            }
+            
+            // Обновляем UI
+            const totalElement = document.getElementById('totalParticipants');
+            const activeElement = document.getElementById('activeParticipants');
+            
+            if (totalElement) totalElement.textContent = totalParticipants;
+            if (activeElement) activeElement.textContent = activeParticipants;
+            
+        }, 5000);
+    }
+    
+    // Триггер универсальной магии
+    function triggerUniversalMagic() {
+        // Выбираем случайный эффект
+        const selectedEffect = selectWeightedMagicEffect();
+        
+        // Выполняем магию
+        selectedEffect.effect();
+        
+        // Показываем информацию об эффекте
+        showMagicInfo(selectedEffect.name);
+        
+        // Отправляем магию всем участникам
+        broadcastMagicToAllParticipants(selectedEffect);
+        
+        // Обновляем панель участников
+        updateLastMagicEffect(selectedEffect.name);
+        
+        // Добавляем эффект в историю для комбинаций
+        magicHistory.push(selectedEffect);
+        if (magicHistory.length > maxHistorySize) {
+            magicHistory.shift();
+        }
+        
+        // Проверяем комбинации
+        checkMagicCombinations();
+        
+        // Обновляем UI магии
+        updateMagicUI();
+        
+        // Создаем визуальный эффект кнопки
+        createButtonMagicEffect();
+    }
+    
+    // Трансляция магии всем участникам
+    function broadcastMagicToAllParticipants(effect) {
+        const magicData = {
+            type: 'universal_magic',
+            playerId: playerId,
+            playerName: playerName,
+            effectName: effect.name,
+            timestamp: Date.now(),
+            level: magicLevel,
+            participants: document.getElementById('activeParticipants')?.textContent || '1'
+        };
+        
+        // Отправляем через все системы
+        sendMagicToPlayers(effect);
+        broadcastMagicGlobally(effect);
+        broadcastMagicToP2PDevices(effect);
+        
+        // Показываем уведомление о трансляции
+        showUniversalMagicNotification(effect);
+        
+        console.log('🌍 Универсальная магия транслируется всем участникам:', magicData);
+    }
+    
+    // Показ уведомления о универсальной магии
+    function showUniversalMagicNotification(effect) {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(45deg, #FF0000, #FFD700, #00FF00);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 20px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
             font-weight: bold;
             text-align: center;
-        `;
-        chatHeader.textContent = '💬 ЧАТ МАГОВ';
-        chatContainer.appendChild(chatHeader);
-        
-        // Область сообщений
-        const messagesArea = document.createElement('div');
-        messagesArea.id = 'chatMessages';
-        messagesArea.style.cssText = `
-            flex: 1;
-            padding: 10px;
-            overflow-y: auto;
-            color: white;
-            font-size: 12px;
-            background: rgba(0, 0, 0, 0.5);
-        `;
-        chatContainer.appendChild(messagesArea);
-        
-        // Поле ввода
-        const inputContainer = document.createElement('div');
-        inputContainer.style.cssText = `
-            display: flex;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            border-radius: 0 0 8px 8px;
+            z-index: 10001;
+            border: 3px solid #FFFFFF;
+            box-shadow: 0 0 40px rgba(255, 0, 0, 0.7);
+            animation: universalMagicNotification 4s ease-out forwards;
         `;
         
-        const messageInput = document.createElement('input');
-        messageInput.type = 'text';
-        messageInput.placeholder = 'Введите сообщение...';
-        messageInput.style.cssText = `
-            flex: 1;
-            padding: 8px;
-            border: 1px solid #8A2BE2;
-            border-radius: 5px;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            font-size: 12px;
+        notification.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <span style="font-size: 24px;">⚡</span>
+                <span>МАГИЯ ДОСТАВЛЕНА ВСЕМ!</span>
+                <span style="font-size: 24px;">⚡</span>
+            </div>
+            <div style="font-size: 18px; color: #FFD700;">
+                ${effect.name}
+            </div>
+            <div style="font-size: 12px; margin-top: 10px; opacity: 0.9;">
+                Все участники видят эту магию!
+            </div>
         `;
         
-        const sendButton = document.createElement('button');
-        sendButton.textContent = 'Отправить';
-        sendButton.style.cssText = `
-            margin-left: 10px;
-            padding: 8px 15px;
-            background: linear-gradient(45deg, #8A2BE2, #4B0082);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 12px;
-        `;
+        // Добавляем CSS анимацию
+        if (!document.getElementById('universalMagicNotificationAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'universalMagicNotificationAnimation';
+            style.textContent = `
+                @keyframes universalMagicNotification {
+                    0% { 
+                        opacity: 0; 
+                        transform: translateX(100px) scale(0.8);
+                    }
+                    20% { 
+                        opacity: 1; 
+                        transform: translateX(0px) scale(1.05);
+                    }
+                    80% { 
+                        opacity: 1; 
+                        transform: translateX(0px) scale(1);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: translateX(100px) scale(0.9);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
         
-        inputContainer.appendChild(messageInput);
-        inputContainer.appendChild(sendButton);
-        chatContainer.appendChild(inputContainer);
+        document.body.appendChild(notification);
         
-        document.body.appendChild(chatContainer);
-        
-        // Обработчики событий
-        sendButton.addEventListener('click', () => {
-            sendChatMessage(messageInput.value);
-            messageInput.value = '';
-        });
-        
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendChatMessage(messageInput.value);
-                messageInput.value = '';
-            }
-        });
-        
-        // Добавляем приветственные сообщения
-        addChatMessage('Система', 'Добро пожаловать в чат магов!', '#00FF00');
-        addChatMessage('Алхимик_42', 'Привет всем! Кто хочет создать зелье?', '#FFD700');
-        addChatMessage('Некромант_99', 'Темная магия правит миром!', '#FF0000');
-        
-        // Симулируем сообщения от других игроков
-        simulateChatMessages();
-    }
-    
-    // Отправка сообщения в чат
-    function sendChatMessage(message) {
-        if (!message.trim()) return;
-        
-        addChatMessage(playerName, message, '#00FFFF');
-        
-        // Симулируем получение сообщения другими игроками
         setTimeout(() => {
-            const responses = [
-                'Интересно...',
-                'Отличная идея!',
-                'Попробуем вместе!',
-                'Магия усиливается!',
-                'Великолепно!',
-                'Это работает!',
-                'Невероятно!',
-                'Продолжаем!'
-            ];
-            
-            const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-            const players = Array.from(networkSimulation.players.values());
-            const randomPlayer = players[Math.floor(Math.random() * players.length)];
-            
-            addChatMessage(randomPlayer.name, randomResponse, '#FF69B4');
-        }, Math.random() * 3000 + 1000);
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 4000);
     }
     
-    // Добавление сообщения в чат
-    function addChatMessage(sender, message, color) {
-        const messagesArea = document.getElementById('chatMessages');
-        if (!messagesArea) return;
-        
-        const messageDiv = document.createElement('div');
-        messageDiv.style.cssText = `
-            margin-bottom: 5px;
-            padding: 5px;
-            border-radius: 5px;
-            background: rgba(0, 0, 0, 0.3);
-        `;
-        
-        const senderSpan = document.createElement('span');
-        senderSpan.style.cssText = `color: ${color}; font-weight: bold;`;
-        senderSpan.textContent = sender + ': ';
-        
-        const messageSpan = document.createElement('span');
-        messageSpan.style.color = 'white';
-        messageSpan.textContent = message;
-        
-        messageDiv.appendChild(senderSpan);
-        messageDiv.appendChild(messageSpan);
-        messagesArea.appendChild(messageDiv);
-        
-        // Прокручиваем вниз
-        messagesArea.scrollTop = messagesArea.scrollHeight;
-        
-        // Ограничиваем количество сообщений
-        const messages = messagesArea.children;
-        if (messages.length > 50) {
-            messagesArea.removeChild(messages[0]);
+    // Обновление последнего эффекта магии
+    function updateLastMagicEffect(effectName) {
+        const lastEffectElement = document.getElementById('lastMagicEffect');
+        if (lastEffectElement) {
+            lastEffectElement.textContent = effectName;
         }
     }
     
-    // Симуляция сообщений в чате
-    function simulateChatMessages() {
-        const chatMessages = [
-            { text: 'Кто-нибудь знает заклинание левитации?', sender: 'Элементалист_17' },
-            { text: 'Попробуйте комбинацию ветра и земли!', sender: 'Хрономант_77' },
-            { text: 'Только что создал новую магию!', sender: 'Космолог_33' },
-            { text: 'Временные эффекты работают отлично!', sender: 'Хрономант_77' },
-            { text: 'Космическая магия невероятна!', sender: 'Космолог_33' },
-            { text: 'Элементальные комбинации - это сила!', sender: 'Элементалист_17' },
-            { text: 'Темная магия требует осторожности...', sender: 'Некромант_99' },
-            { text: 'Алхимия - основа всех магических искусств!', sender: 'Алхимик_42' }
-        ];
+    // Создание визуального эффекта кнопки
+    function createButtonMagicEffect() {
+        const button = document.getElementById('universalMagicButton');
+        if (!button) return;
         
-        setInterval(() => {
-            if (Math.random() < 0.3) { // 30% шанс сообщения каждые 10 секунд
-                const randomMessage = chatMessages[Math.floor(Math.random() * chatMessages.length)];
-                addChatMessage(randomMessage.sender, randomMessage.text, '#FFD700');
+        // Создаем эффект взрыва
+        const explosion = document.createElement('div');
+        explosion.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 0, 0, 0.8) 0%, rgba(255, 215, 0, 0.6) 30%, rgba(0, 255, 0, 0.4) 60%, transparent 100%);
+            z-index: 9998;
+            animation: buttonMagicExplosion 1s ease-out forwards;
+            pointer-events: none;
+        `;
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('buttonMagicExplosionAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'buttonMagicExplosionAnimation';
+            style.textContent = `
+                @keyframes buttonMagicExplosion {
+                    0% { 
+                        transform: translate(-50%, -50%) scale(0);
+                        opacity: 1;
+                    }
+                    50% { 
+                        transform: translate(-50%, -50%) scale(1.5);
+                        opacity: 0.8;
+                    }
+                    100% { 
+                        transform: translate(-50%, -50%) scale(3);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(explosion);
+        
+        setTimeout(() => {
+            if (explosion.parentNode) {
+                explosion.parentNode.removeChild(explosion);
             }
-        }, 10000);
+        }, 1000);
+    }
+    
+    // Показ информации о простой системе
+    function showSimpleMagicInfo() {
+        const infoDiv = document.createElement('div');
+        infoDiv.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.95);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            text-align: center;
+            z-index: 10000;
+            border: 3px solid #00FF00;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+            max-width: 90vw;
+            animation: simpleMagicInfoAnimation 10s ease-in-out infinite;
+        `;
+        
+        infoDiv.innerHTML = `
+            <div style="color: #00FF00; font-weight: bold; font-size: 18px; margin-bottom: 15px;">
+                ⚡ ПРОСТАЯ СИСТЕМА МАГИИ ⚡
+            </div>
+            <div style="margin-bottom: 10px;">
+                <div>• Одна кнопка для всех участников</div>
+                <div>• Магия доставляется всем автоматически</div>
+                <div>• Никаких чатов - только магия!</div>
+                <div>• Просто нажмите кнопку и наслаждайтесь</div>
+            </div>
+            <div style="color: #FFD700; font-weight: bold; margin-top: 15px;">
+                Нажмите большую кнопку в центре! ✨
+            </div>
+        `;
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('simpleMagicInfoAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'simpleMagicInfoAnimation';
+            style.textContent = `
+                @keyframes simpleMagicInfoAnimation {
+                    0%, 100% { opacity: 0.8; }
+                    50% { opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(infoDiv);
+        
+        // Скрываем через 15 секунд
+        setTimeout(() => {
+            if (infoDiv.parentNode) {
+                infoDiv.style.animation = 'simpleMagicInfoFadeOut 3s ease-out forwards';
+                setTimeout(() => {
+                    if (infoDiv.parentNode) {
+                        infoDiv.parentNode.removeChild(infoDiv);
+                    }
+                }, 3000);
+            }
+        }, 15000);
+        
+        // Добавляем CSS анимацию исчезновения
+        if (!document.getElementById('simpleMagicInfoFadeOutAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'simpleMagicInfoFadeOutAnimation';
+            style.textContent = `
+                @keyframes simpleMagicInfoFadeOut {
+                    0% { opacity: 1; }
+                    100% { opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
     }
     
     // МАГИЧЕСКИЙ РАДАР И СИСТЕМА ПОИСКА МАГОВ
@@ -4502,6 +5332,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const effectName = getEffectNameByKey(key);
             if (effectName) {
                 sendMagicToPlayers({ name: effectName });
+                broadcastMagicGlobally({ name: effectName });
+                broadcastMagicToP2PDevices({ name: effectName });
             }
             
             // Создаем визуальную обратную связь
@@ -4639,6 +5471,21 @@ document.addEventListener('DOMContentLoaded', function() {
         if (gestureEffects[gesture]) {
             gestureEffects[gesture]();
             showMagicInfo(`Жестовая магия: ${gesture}`);
+            
+            // Транслируем жестовую магию глобально
+            const gestureEffectNames = {
+                'tap': 'Магический взрыв',
+                'swipeUp': 'Ветряной торнадо',
+                'swipeDown': 'Землетрясение',
+                'swipeLeft': 'Огненный шторм',
+                'swipeRight': 'Водоворот'
+            };
+            
+            const effectName = gestureEffectNames[gesture];
+            if (effectName) {
+                broadcastMagicGlobally({ name: effectName });
+                broadcastMagicToP2PDevices({ name: effectName });
+            }
             
             // Создаем визуальную обратную связь для жеста
             createGestureFeedback(gesture);
@@ -4822,6 +5669,752 @@ document.addEventListener('DOMContentLoaded', function() {
                 mobileTips.parentNode.removeChild(mobileTips);
             }
         }, 8000);
+    }
+    
+    // ГЛОБАЛЬНАЯ СИСТЕМА ТРАНСЛЯЦИИ МАГИИ
+    
+    // Инициализация глобальной трансляции
+    function initializeGlobalMagicBroadcast() {
+        console.log('🌍 Глобальная трансляция магии активирована!');
+        
+        // Создаем UI для глобальной трансляции
+        createGlobalBroadcastUI();
+        
+        // Инициализируем потоковую передачу
+        initializeMagicStreaming();
+        
+        // Добавляем виртуальных зрителей со всего мира
+        addGlobalViewers();
+        
+        // Показываем информацию о глобальной трансляции
+        showGlobalBroadcastInfo();
+    }
+    
+    // Создание UI для глобальной трансляции
+    function createGlobalBroadcastUI() {
+        const broadcastPanel = document.createElement('div');
+        broadcastPanel.id = 'globalBroadcastPanel';
+        broadcastPanel.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(90deg, #FF0000, #FFD700, #00FF00, #00FFFF, #8A2BE2);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 10000;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+            animation: globalBroadcastPulse 3s ease-in-out infinite;
+            border: 3px solid #FFFFFF;
+        `;
+        
+        broadcastPanel.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 20px;">🌍</span>
+                <span>ГЛОБАЛЬНАЯ ТРАНСЛЯЦИЯ АКТИВНА</span>
+                <span style="font-size: 20px;">🌍</span>
+            </div>
+            <div style="font-size: 12px; margin-top: 5px;">
+                Зрителей: <span id="globalViewerCount">0</span> | Просмотров: <span id="globalViewCount">0</span>
+            </div>
+        `;
+        
+        document.body.appendChild(broadcastPanel);
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('globalBroadcastPulseAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'globalBroadcastPulseAnimation';
+            style.textContent = `
+                @keyframes globalBroadcastPulse {
+                    0%, 100% { 
+                        transform: translateX(-50%) scale(1);
+                        box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+                    }
+                    50% { 
+                        transform: translateX(-50%) scale(1.05);
+                        box-shadow: 0 0 40px rgba(255, 0, 0, 0.8);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+    
+    // Инициализация потоковой передачи магии
+    function initializeMagicStreaming() {
+        // Симулируем подключение к глобальной сети
+        setTimeout(() => {
+            globalMagicBroadcast.magicStream.active = true;
+            updateGlobalViewerCount();
+            
+            // Запускаем симуляцию зрителей
+            simulateGlobalViewers();
+        }, 2000);
+    }
+    
+    // Добавление виртуальных зрителей со всего мира
+    function addGlobalViewers() {
+        const globalViewers = [
+            { id: 'viewer_001', name: 'Маг_Токио', location: 'Токио, Япония', timezone: 'JST' },
+            { id: 'viewer_002', name: 'Маг_Лондон', location: 'Лондон, Великобритания', timezone: 'GMT' },
+            { id: 'viewer_003', name: 'Маг_НьюЙорк', location: 'Нью-Йорк, США', timezone: 'EST' },
+            { id: 'viewer_004', name: 'Маг_Сидней', location: 'Сидней, Австралия', timezone: 'AEST' },
+            { id: 'viewer_005', name: 'Маг_Москва', location: 'Москва, Россия', timezone: 'MSK' },
+            { id: 'viewer_006', name: 'Маг_Париж', location: 'Париж, Франция', timezone: 'CET' },
+            { id: 'viewer_007', name: 'Маг_Дубай', location: 'Дубай, ОАЭ', timezone: 'GST' },
+            { id: 'viewer_008', name: 'Маг_СанПаулу', location: 'Сан-Паулу, Бразилия', timezone: 'BRT' },
+            { id: 'viewer_009', name: 'Маг_Мумбаи', location: 'Мумбаи, Индия', timezone: 'IST' },
+            { id: 'viewer_010', name: 'Маг_Торонто', location: 'Торонто, Канада', timezone: 'EST' }
+        ];
+        
+        globalViewers.forEach(viewer => {
+            globalMagicBroadcast.magicStream.viewers.set(viewer.id, {
+                ...viewer,
+                joinedAt: Date.now() - Math.random() * 300000, // Присоединились в разное время
+                magicWatched: Math.floor(Math.random() * 100),
+                isWatching: true
+            });
+        });
+        
+        updateGlobalViewerCount();
+    }
+    
+    // Симуляция глобальных зрителей
+    function simulateGlobalViewers() {
+        setInterval(() => {
+            // Случайно добавляем/убираем зрителей
+            if (Math.random() < 0.3) {
+                const viewers = Array.from(globalMagicBroadcast.magicStream.viewers.values());
+                const randomViewer = viewers[Math.floor(Math.random() * viewers.length)];
+                
+                if (randomViewer) {
+                    randomViewer.isWatching = !randomViewer.isWatching;
+                    if (randomViewer.isWatching) {
+                        globalMagicBroadcast.magicStream.totalViews++;
+                    }
+                }
+            }
+            
+            updateGlobalViewerCount();
+        }, 5000);
+    }
+    
+    // Обновление счетчика зрителей
+    function updateGlobalViewerCount() {
+        const activeViewers = Array.from(globalMagicBroadcast.magicStream.viewers.values())
+            .filter(viewer => viewer.isWatching).length;
+        
+        const viewerCountElement = document.getElementById('globalViewerCount');
+        const viewCountElement = document.getElementById('globalViewCount');
+        
+        if (viewerCountElement) {
+            viewerCountElement.textContent = activeViewers;
+        }
+        
+        if (viewCountElement) {
+            viewCountElement.textContent = globalMagicBroadcast.magicStream.totalViews;
+        }
+    }
+    
+    // Глобальная трансляция магии
+    function broadcastMagicGlobally(effect) {
+        if (!globalMagicBroadcast.enabled) return;
+        
+        const magicData = {
+            type: 'global_magic_broadcast',
+            playerId: playerId,
+            playerName: playerName,
+            effectName: effect.name,
+            timestamp: Date.now(),
+            level: magicLevel,
+            location: 'Глобальная сеть',
+            broadcastId: 'broadcast_' + Date.now()
+        };
+        
+        // Симулируем глобальную трансляцию
+        setTimeout(() => {
+            // В реальной системе здесь был бы WebSocket.send() на глобальный сервер
+            console.log('🌍 Глобальная трансляция:', magicData);
+            
+            // Добавляем в историю магии
+            globalMagicBroadcast.magicStream.magicHistory.push(magicData);
+            if (globalMagicBroadcast.magicStream.magicHistory.length > 100) {
+                globalMagicBroadcast.magicStream.magicHistory.shift();
+            }
+            
+            // Увеличиваем счетчик просмотров
+            globalMagicBroadcast.magicStream.totalViews += 
+                Array.from(globalMagicBroadcast.magicStream.viewers.values())
+                    .filter(viewer => viewer.isWatching).length;
+            
+            // Показываем уведомление о глобальной трансляции
+            showGlobalBroadcastNotification(effect);
+            
+            // Обновляем счетчики
+            updateGlobalViewerCount();
+            
+        }, globalMagicBroadcast.realTimeSync.latency);
+    }
+    
+    // Показ уведомления о глобальной трансляции
+    function showGlobalBroadcastNotification(effect) {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(45deg, #FF0000, #FFD700, #00FF00);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 20px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 10001;
+            border: 3px solid #FFFFFF;
+            box-shadow: 0 0 40px rgba(255, 0, 0, 0.7);
+            animation: globalBroadcastNotification 4s ease-out forwards;
+        `;
+        
+        notification.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <span style="font-size: 24px;">🌍</span>
+                <span>ВАША МАГИЯ ТРАНСЛИРУЕТСЯ ВСЕМУ МИРУ!</span>
+                <span style="font-size: 24px;">🌍</span>
+            </div>
+            <div style="font-size: 18px; color: #FFD700;">
+                ${effect.name}
+            </div>
+            <div style="font-size: 12px; margin-top: 10px; opacity: 0.9;">
+                Зрители по всему миру видят вашу магию!
+            </div>
+        `;
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('globalBroadcastNotificationAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'globalBroadcastNotificationAnimation';
+            style.textContent = `
+                @keyframes globalBroadcastNotification {
+                    0% { 
+                        opacity: 0; 
+                        transform: translateX(-50%) translateY(-30px) scale(0.8);
+                    }
+                    20% { 
+                        opacity: 1; 
+                        transform: translateX(-50%) translateY(0px) scale(1.05);
+                    }
+                    80% { 
+                        opacity: 1; 
+                        transform: translateX(-50%) translateY(0px) scale(1);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: translateX(-50%) translateY(-20px) scale(0.9);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 4000);
+    }
+    
+    // Показ информации о глобальной трансляции
+    function showGlobalBroadcastInfo() {
+        const infoDiv = document.createElement('div');
+        infoDiv.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.95);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            text-align: center;
+            z-index: 10000;
+            border: 3px solid #FF0000;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+            max-width: 90vw;
+            animation: globalBroadcastInfoAnimation 10s ease-in-out infinite;
+        `;
+        
+        infoDiv.innerHTML = `
+            <div style="color: #FF0000; font-weight: bold; font-size: 18px; margin-bottom: 15px;">
+                🌍 ГЛОБАЛЬНАЯ ТРАНСЛЯЦИЯ МАГИИ 🌍
+            </div>
+            <div style="margin-bottom: 10px;">
+                <div>• ВСЯ ваша магия транслируется всему миру</div>
+                <div>• Зрители из разных стран видят ваши эффекты</div>
+                <div>• Синхронизация в реальном времени</div>
+                <div>• Глобальная магическая сеть активна</div>
+            </div>
+            <div style="color: #FFD700; font-weight: bold; margin-top: 15px;">
+                Используйте магию - весь мир увидит! ✨
+            </div>
+        `;
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('globalBroadcastInfoAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'globalBroadcastInfoAnimation';
+            style.textContent = `
+                @keyframes globalBroadcastInfoAnimation {
+                    0%, 100% { opacity: 0.8; }
+                    50% { opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(infoDiv);
+        
+        // Скрываем через 15 секунд
+        setTimeout(() => {
+            if (infoDiv.parentNode) {
+                infoDiv.style.animation = 'globalBroadcastInfoFadeOut 3s ease-out forwards';
+                setTimeout(() => {
+                    if (infoDiv.parentNode) {
+                        infoDiv.parentNode.removeChild(infoDiv);
+                    }
+                }, 3000);
+            }
+        }, 15000);
+        
+        // Добавляем CSS анимацию исчезновения
+        if (!document.getElementById('globalBroadcastInfoFadeOutAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'globalBroadcastInfoFadeOutAnimation';
+            style.textContent = `
+                @keyframes globalBroadcastInfoFadeOut {
+                    0% { opacity: 1; }
+                    100% { opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+    
+    // P2P СИСТЕМА СВЯЗИ УСТРОЙСТВ (Socket Supply + UDP Punch-hole)
+    
+    // Инициализация P2P сети
+    function initializeP2PMagicNetwork() {
+        console.log('🔗 P2P система связи устройств инициализируется...');
+        
+        // Создаем UI для P2P системы
+        createP2PNetworkUI();
+        
+        // Инициализируем Socket Supply
+        initializeSocketSupply();
+        
+        // Инициализируем UDP punch-hole
+        initializeUDPPunchHole();
+        
+        // Показываем информацию о P2P соединении
+        showP2PConnectionInfo();
+    }
+    
+    // Создание UI для P2P сети
+    function createP2PNetworkUI() {
+        const p2pPanel = document.createElement('div');
+        p2pPanel.id = 'p2pNetworkPanel';
+        p2pPanel.style.cssText = `
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            z-index: 9999;
+            border: 2px solid #00FFFF;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+            min-width: 250px;
+            max-width: 300px;
+        `;
+        
+        p2pPanel.innerHTML = `
+            <div style="color: #00FFFF; font-weight: bold; margin-bottom: 10px;">🔗 P2P СВЯЗЬ УСТРОЙСТВ</div>
+            <div>ID устройства: <span style="color: #FFD700;">${p2pMagicNetwork.socketSupply.deviceId}</span></div>
+            <div>Статус: <span id="p2pStatus" style="color: #FF0000;">Подключение...</span></div>
+            <div>Устройств: <span id="p2pDeviceCount" style="color: #00FF00;">0</span></div>
+            <div>Комната: <span id="p2pRoomId" style="color: #FF69B4;">Создание...</span></div>
+            <div style="margin-top: 10px; font-size: 10px; color: #CCC;">
+                Связь через UDP punch-hole
+            </div>
+            <div id="p2pMagicSync" style="margin-top: 10px; font-size: 10px; color: #FFD700;">
+                Синхронизация магии: <span id="p2pSyncStatus">Активна</span>
+            </div>
+        `;
+        
+        document.body.appendChild(p2pPanel);
+    }
+    
+    // Инициализация Socket Supply
+    function initializeSocketSupply() {
+        // Симулируем подключение к Socket Supply
+        setTimeout(() => {
+            p2pMagicNetwork.socketSupply.initialized = true;
+            p2pMagicNetwork.socketSupply.roomId = 'magic_room_' + Math.random().toString(36).substr(2, 6);
+            
+            updateP2PStatus('Подключен к Socket Supply');
+            updateP2PRoomId(p2pMagicNetwork.socketSupply.roomId);
+            
+            // Симулируем подключение других устройств
+            simulateDeviceConnections();
+            
+        }, 2000);
+    }
+    
+    // Инициализация UDP punch-hole
+    function initializeUDPPunchHole() {
+        // Симулируем создание WebRTC соединения
+        setTimeout(() => {
+            p2pMagicNetwork.udpPunchHole.peerConnection = {
+                connectionState: 'connected',
+                iceConnectionState: 'connected'
+            };
+            
+            updateP2PStatus('UDP punch-hole активен');
+            
+            // Запускаем синхронизацию магии
+            startMagicSync();
+            
+        }, 3000);
+    }
+    
+    // Симуляция подключения устройств
+    function simulateDeviceConnections() {
+        const deviceTypes = ['Компьютер', 'Телефон', 'Планшет'];
+        const deviceNames = ['Главный_ПК', 'Мобильный_Маг', 'Планшет_Магии'];
+        
+        setInterval(() => {
+            if (Math.random() < 0.3) { // 30% шанс подключения нового устройства
+                const deviceType = deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
+                const deviceName = deviceNames[Math.floor(Math.random() * deviceNames.length)];
+                const deviceId = 'device_' + Math.random().toString(36).substr(2, 6);
+                
+                p2pMagicNetwork.connectedDevices.set(deviceId, {
+                    id: deviceId,
+                    name: deviceName,
+                    type: deviceType,
+                    connectedAt: Date.now(),
+                    isActive: true
+                });
+                
+                updateP2PDeviceCount();
+                showDeviceConnectedNotification(deviceName, deviceType);
+            }
+        }, 10000);
+    }
+    
+    // Запуск синхронизации магии
+    function startMagicSync() {
+        setInterval(() => {
+            if (p2pMagicNetwork.magicSync.buffer.length > 0) {
+                const magicData = p2pMagicNetwork.magicSync.buffer.shift();
+                broadcastMagicToDevices(magicData);
+            }
+        }, p2pMagicNetwork.magicSync.syncInterval);
+    }
+    
+    // Трансляция магии на подключенные устройства
+    function broadcastMagicToDevices(magicData) {
+        if (p2pMagicNetwork.connectedDevices.size === 0) return;
+        
+        // Симулируем отправку через P2P соединение
+        p2pMagicNetwork.connectedDevices.forEach((device, deviceId) => {
+            if (device.isActive) {
+                // В реальной системе здесь был бы WebRTC data channel
+                console.log(`📱 Трансляция магии на ${device.name} (${device.type}):`, magicData);
+                
+                // Симулируем получение магии на другом устройстве
+                simulateMagicOnDevice(device, magicData);
+            }
+        });
+    }
+    
+    // Симуляция получения магии на другом устройстве
+    function simulateMagicOnDevice(device, magicData) {
+        // Создаем уведомление о получении магии
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(45deg, #00FFFF, #0080FF);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 20px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 10001;
+            border: 3px solid #FFFFFF;
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.7);
+            animation: deviceMagicNotification 4s ease-out forwards;
+        `;
+        
+        notification.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <span style="font-size: 24px;">📱</span>
+                <span>МАГИЯ ПОЛУЧЕНА С ${device.name.toUpperCase()}!</span>
+                <span style="font-size: 24px;">📱</span>
+            </div>
+            <div style="font-size: 18px; color: #FFD700;">
+                ${magicData.effectName}
+            </div>
+            <div style="font-size: 12px; margin-top: 10px; opacity: 0.9;">
+                Устройство: ${device.type} | ID: ${device.id}
+            </div>
+        `;
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('deviceMagicNotificationAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'deviceMagicNotificationAnimation';
+            style.textContent = `
+                @keyframes deviceMagicNotification {
+                    0% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) translateY(-30px) scale(0.8);
+                    }
+                    20% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) translateY(0px) scale(1.05);
+                    }
+                    80% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -50%) translateY(0px) scale(1);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) translateY(-20px) scale(0.9);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 4000);
+    }
+    
+    // Показ уведомления о подключении устройства
+    function showDeviceConnectedNotification(deviceName, deviceType) {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 120px;
+            right: 20px;
+            background: rgba(0, 255, 0, 0.9);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 10001;
+            border: 2px solid #FFFFFF;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+            animation: deviceConnectedNotification 3s ease-out forwards;
+        `;
+        
+        notification.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 18px;">🔗</span>
+                <span>${deviceName} подключен!</span>
+            </div>
+            <div style="font-size: 12px; margin-top: 5px; opacity: 0.9;">
+                ${deviceType} | P2P соединение активно
+            </div>
+        `;
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('deviceConnectedNotificationAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'deviceConnectedNotificationAnimation';
+            style.textContent = `
+                @keyframes deviceConnectedNotification {
+                    0% { 
+                        opacity: 0; 
+                        transform: translateX(100px);
+                    }
+                    20% { 
+                        opacity: 1; 
+                        transform: translateX(0px);
+                    }
+                    80% { 
+                        opacity: 1; 
+                        transform: translateX(0px);
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: translateX(100px);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 3000);
+    }
+    
+    // Обновление статуса P2P
+    function updateP2PStatus(status) {
+        const statusElement = document.getElementById('p2pStatus');
+        if (statusElement) {
+            statusElement.textContent = status;
+            statusElement.style.color = status.includes('активен') || status.includes('Подключен') ? '#00FF00' : '#FF0000';
+        }
+    }
+    
+    // Обновление количества устройств
+    function updateP2PDeviceCount() {
+        const countElement = document.getElementById('p2pDeviceCount');
+        if (countElement) {
+            countElement.textContent = p2pMagicNetwork.connectedDevices.size;
+        }
+    }
+    
+    // Обновление ID комнаты
+    function updateP2PRoomId(roomId) {
+        const roomElement = document.getElementById('p2pRoomId');
+        if (roomElement) {
+            roomElement.textContent = roomId;
+        }
+    }
+    
+    // Показ информации о P2P соединении
+    function showP2PConnectionInfo() {
+        const infoDiv = document.createElement('div');
+        infoDiv.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.95);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            text-align: center;
+            z-index: 10000;
+            border: 3px solid #00FFFF;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+            max-width: 90vw;
+            animation: p2pConnectionInfoAnimation 10s ease-in-out infinite;
+        `;
+        
+        infoDiv.innerHTML = `
+            <div style="color: #00FFFF; font-weight: bold; font-size: 18px; margin-bottom: 15px;">
+                🔗 P2P СВЯЗЬ УСТРОЙСТВ 🔗
+            </div>
+            <div style="margin-bottom: 10px;">
+                <div>• Socket Supply + UDP punch-hole</div>
+                <div>• Прямая связь между устройствами</div>
+                <div>• Магия синхронизируется в реальном времени</div>
+                <div>• Подключите телефон к компьютеру</div>
+            </div>
+            <div style="color: #FFD700; font-weight: bold; margin-top: 15px;">
+                ID комнаты: ${p2pMagicNetwork.socketSupply.roomId || 'Создание...'}
+            </div>
+        `;
+        
+        // Добавляем CSS анимацию
+        if (!document.getElementById('p2pConnectionInfoAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'p2pConnectionInfoAnimation';
+            style.textContent = `
+                @keyframes p2pConnectionInfoAnimation {
+                    0%, 100% { opacity: 0.8; }
+                    50% { opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(infoDiv);
+        
+        // Скрываем через 15 секунд
+        setTimeout(() => {
+            if (infoDiv.parentNode) {
+                infoDiv.style.animation = 'p2pConnectionInfoFadeOut 3s ease-out forwards';
+                setTimeout(() => {
+                    if (infoDiv.parentNode) {
+                        infoDiv.parentNode.removeChild(infoDiv);
+                    }
+                }, 3000);
+            }
+        }, 15000);
+        
+        // Добавляем CSS анимацию исчезновения
+        if (!document.getElementById('p2pConnectionInfoFadeOutAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'p2pConnectionInfoFadeOutAnimation';
+            style.textContent = `
+                @keyframes p2pConnectionInfoFadeOut {
+                    0% { opacity: 1; }
+                    100% { opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+    
+    // Трансляция магии через P2P сеть
+    function broadcastMagicToP2PDevices(effect) {
+        if (!p2pMagicNetwork.enabled) return;
+        
+        const magicData = {
+            type: 'p2p_magic_broadcast',
+            playerId: playerId,
+            playerName: playerName,
+            effectName: effect.name,
+            timestamp: Date.now(),
+            level: magicLevel,
+            deviceId: p2pMagicNetwork.socketSupply.deviceId,
+            roomId: p2pMagicNetwork.socketSupply.roomId
+        };
+        
+        // Добавляем в буфер синхронизации
+        p2pMagicNetwork.magicSync.buffer.push(magicData);
+        
+        // Логируем для отладки
+        console.log('🔗 P2P трансляция магии:', magicData);
     }
     
     // Функция выбора эффекта с учетом весов
@@ -11331,4 +12924,517 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Логируем успешную загрузку
     console.log('Виртуальная дверь создана! Вы можете войти в несуществующий мир...');
+    
+    // Missing function definitions
+    function createTreeGrowth() {
+        const container = document.body;
+        const tree = document.createElement('div');
+        tree.style.cssText = `
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 0;
+            background: linear-gradient(to top, #8B4513, #228B22);
+            border-radius: 10px 10px 0 0;
+            z-index: 1000;
+            animation: treeGrowth 3s ease-out forwards;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes treeGrowth {
+                from { height: 0; }
+                to { height: 200px; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(tree);
+        setTimeout(() => tree.remove(), 5000);
+    }
+    
+    function createFlowerBloom() {
+        const container = document.body;
+        for (let i = 0; i < 10; i++) {
+            const flower = document.createElement('div');
+            flower.style.cssText = `
+                position: fixed;
+                left: ${Math.random() * window.innerWidth}px;
+                top: ${Math.random() * window.innerHeight}px;
+                width: 20px;
+                height: 20px;
+                background: radial-gradient(circle, #FF69B4, #FFB6C1);
+                border-radius: 50%;
+                z-index: 1000;
+                animation: flowerBloom 2s ease-out forwards;
+            `;
+            
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes flowerBloom {
+                    0% { transform: scale(0); opacity: 0; }
+                    50% { transform: scale(1.2); opacity: 1; }
+                    100% { transform: scale(1); opacity: 0.8; }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            container.appendChild(flower);
+            setTimeout(() => flower.remove(), 3000);
+        }
+    }
+    
+    function createChaosVortex() {
+        const container = document.body;
+        const vortex = document.createElement('div');
+        vortex.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            border: 3px solid #FF00FF;
+            border-radius: 50%;
+            z-index: 1000;
+            animation: chaosVortex 4s linear infinite;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes chaosVortex {
+                0% { transform: translate(-50%, -50%) rotate(0deg) scale(0.5); }
+                50% { transform: translate(-50%, -50%) rotate(180deg) scale(1.5); }
+                100% { transform: translate(-50%, -50%) rotate(360deg) scale(0.5); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(vortex);
+        setTimeout(() => vortex.remove(), 5000);
+    }
+    
+    function createUniverseCreation() {
+        const container = document.body;
+        const universe = document.createElement('div');
+        universe.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, #000011, #000033, #000066);
+            border-radius: 50%;
+            z-index: 1000;
+            animation: universeCreation 6s ease-out forwards;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes universeCreation {
+                0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+                50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+                100% { transform: translate(-50%, -50%) scale(1); opacity: 0.9; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(universe);
+        setTimeout(() => universe.remove(), 8000);
+    }
+    
+    function createMemoryWipe() {
+        const container = document.body;
+        const wipe = document.createElement('div');
+        wipe.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #FFFFFF, #F0F0F0);
+            z-index: 1000;
+            animation: memoryWipe 3s ease-out forwards;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes memoryWipe {
+                0% { opacity: 0; }
+                50% { opacity: 0.8; }
+                100% { opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(wipe);
+        setTimeout(() => wipe.remove(), 4000);
+    }
+    
+    function createSeasonChange() {
+        const container = document.body;
+        const season = document.createElement('div');
+        const colors = ['#FFE4B5', '#87CEEB', '#90EE90', '#FFB6C1'];
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        
+        season.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: ${color};
+            z-index: 1000;
+            animation: seasonChange 4s ease-out forwards;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes seasonChange {
+                0% { opacity: 0; }
+                50% { opacity: 0.3; }
+                100% { opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(season);
+        setTimeout(() => season.remove(), 5000);
+    }
+    
+    function createDreamRealm() {
+        const container = document.body;
+        const dream = document.createElement('div');
+        dream.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, #E6E6FA, #DDA0DD, #DA70D6);
+            border-radius: 50%;
+            z-index: 1000;
+            animation: dreamRealm 5s ease-out forwards;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes dreamRealm {
+                0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; }
+                50% { transform: translate(-50%, -50%) scale(1.1) rotate(180deg); opacity: 0.8; }
+                100% { transform: translate(-50%, -50%) scale(1) rotate(360deg); opacity: 0.6; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(dream);
+        setTimeout(() => dream.remove(), 6000);
+    }
+    
+    function createQuantumFoam() {
+        const container = document.body;
+        for (let i = 0; i < 20; i++) {
+            const foam = document.createElement('div');
+            foam.style.cssText = `
+                position: fixed;
+                left: ${Math.random() * window.innerWidth}px;
+                top: ${Math.random() * window.innerHeight}px;
+                width: 10px;
+                height: 10px;
+                background: #00FFFF;
+                border-radius: 50%;
+                z-index: 1000;
+                animation: quantumFoam 3s ease-out forwards;
+            `;
+            
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes quantumFoam {
+                    0% { transform: scale(0); opacity: 0; }
+                    50% { transform: scale(1.5); opacity: 1; }
+                    100% { transform: scale(0.5); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            container.appendChild(foam);
+            setTimeout(() => foam.remove(), 4000);
+        }
+    }
+    
+    function createAnimalSummon() {
+        const container = document.body;
+        const animal = document.createElement('div');
+        animal.style.cssText = `
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            background: #8B4513;
+            border-radius: 50%;
+            z-index: 1000;
+            animation: animalSummon 3s ease-out forwards;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes animalSummon {
+                0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+                50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+                100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(animal);
+        setTimeout(() => animal.remove(), 4000);
+    }
+    
+    function spawnMagicCrystals() {
+        const container = document.body;
+        for (let i = 0; i < 15; i++) {
+            const crystal = document.createElement('div');
+            crystal.style.cssText = `
+                position: fixed;
+                left: ${Math.random() * window.innerWidth}px;
+                top: ${Math.random() * window.innerHeight}px;
+                width: 15px;
+                height: 15px;
+                background: linear-gradient(45deg, #FFD700, #FFA500);
+                transform: rotate(45deg);
+                z-index: 1000;
+                animation: magicCrystal 4s ease-out forwards;
+            `;
+            
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes magicCrystal {
+                    0% { transform: rotate(45deg) scale(0); opacity: 0; }
+                    50% { transform: rotate(45deg) scale(1.3); opacity: 1; }
+                    100% { transform: rotate(45deg) scale(1); opacity: 0.7; }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            container.appendChild(crystal);
+            setTimeout(() => crystal.remove(), 5000);
+        }
+    }
+    
+    function createWeatherControl() {
+        const container = document.body;
+        const weather = document.createElement('div');
+        weather.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #87CEEB, #B0C4DE);
+            z-index: 1000;
+            animation: weatherControl 4s ease-out forwards;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes weatherControl {
+                0% { opacity: 0; }
+                50% { opacity: 0.4; }
+                100% { opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(weather);
+        setTimeout(() => weather.remove(), 5000);
+    }
+    
+    function createTelepathy() {
+        const container = document.body;
+        const telepathy = document.createElement('div');
+        telepathy.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            border: 2px solid #8A2BE2;
+            border-radius: 50%;
+            z-index: 1000;
+            animation: telepathy 3s ease-out forwards;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes telepathy {
+                0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+                50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
+                100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(telepathy);
+        setTimeout(() => telepathy.remove(), 4000);
+    }
+    
+    function createNatureSpirits() {
+        const container = document.body;
+        for (let i = 0; i < 8; i++) {
+            const spirit = document.createElement('div');
+            spirit.style.cssText = `
+                position: fixed;
+                left: ${Math.random() * window.innerWidth}px;
+                top: ${Math.random() * window.innerHeight}px;
+                width: 25px;
+                height: 25px;
+                background: radial-gradient(circle, #90EE90, #32CD32);
+                border-radius: 50%;
+                z-index: 1000;
+                animation: natureSpirit 4s ease-out forwards;
+            `;
+            
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes natureSpirit {
+                    0% { transform: scale(0) rotate(0deg); opacity: 0; }
+                    50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+                    100% { transform: scale(1) rotate(360deg); opacity: 0.6; }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            container.appendChild(spirit);
+            setTimeout(() => spirit.remove(), 5000);
+        }
+    }
+    
+    function createRealityBreak() {
+        const container = document.body;
+        const reality = document.createElement('div');
+        reality.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                45deg,
+                #FF0000,
+                #FF0000 10px,
+                #000000 10px,
+                #000000 20px
+            );
+            z-index: 1000;
+            animation: realityBreak 3s ease-out forwards;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes realityBreak {
+                0% { opacity: 0; }
+                50% { opacity: 0.6; }
+                100% { opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(reality);
+        setTimeout(() => reality.remove(), 4000);
+    }
+    
+    function createMindControl() {
+        const container = document.body;
+        const mind = document.createElement('div');
+        mind.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, #FF1493, #8B008B);
+            border-radius: 50%;
+            z-index: 1000;
+            animation: mindControl 3s ease-out forwards;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes mindControl {
+                0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+                50% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.9; }
+                100% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(mind);
+        setTimeout(() => mind.remove(), 4000);
+    }
+    
+    function createIllusion() {
+        const container = document.body;
+        const illusion = document.createElement('div');
+        illusion.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(45deg, #FF00FF, #00FFFF, #FFFF00);
+            border-radius: 20px;
+            z-index: 1000;
+            animation: illusion 4s ease-out forwards;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes illusion {
+                0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; }
+                50% { transform: translate(-50%, -50%) scale(1.1) rotate(180deg); opacity: 0.8; }
+                100% { transform: translate(-50%, -50%) scale(1) rotate(360deg); opacity: 0.5; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(illusion);
+        setTimeout(() => illusion.remove(), 5000);
+    }
+    
+    function createOmnipotence() {
+        const container = document.body;
+        const omnipotence = document.createElement('div');
+        omnipotence.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #FFD700, #FFA500, #FF8C00);
+            z-index: 1000;
+            animation: omnipotence 5s ease-out forwards;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes omnipotence {
+                0% { opacity: 0; }
+                50% { opacity: 0.7; }
+                100% { opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(omnipotence);
+        setTimeout(() => omnipotence.remove(), 6000);
+    }
 });

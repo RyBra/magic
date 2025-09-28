@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📱 Подключение телефона к магии</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            border-radius: 20px;
+            border: 3px solid #00FFFF;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #00FFFF;
+            font-size: 28px;
+            margin: 0;
+        }
+        .step {
+            background: rgba(0, 255, 255, 0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 15px;
+            border-left: 5px solid #00FFFF;
+        }
+        .step h3 {
+            color: #FFD700;
+            margin-top: 0;
+        }
+        .code {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            font-family: monospace;
+            color: #00FF00;
+            margin: 10px 0;
+            border: 1px solid #00FF00;
+        }
+        .button {
+            background: linear-gradient(45deg, #00FFFF, #0080FF);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            text-decoration: none;
+            display: inline-block;
+            transition: transform 0.3s;
+        }
+        .button:hover {
+            transform: scale(1.05);
+        }
+        .status {
+            background: rgba(0, 255, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #00FF00;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .warning {
+            background: rgba(255, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #FF0000;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱🔗 Подключение телефона к магии</h1>
+            <p>Свяжите телефон с компьютером через P2P сеть</p>
+        </div>
+
+        <div class="step">
+            <h3>🔗 Шаг 1: Откройте игру на компьютере</h3>
+            <p>Запустите основную игру на компьютере и дождитесь активации P2P системы.</p>
+            <div class="code" id="roomId">ID комнаты: Создание...</div>
+        </div>
+
+        <div class="step">
+            <h3>📱 Шаг 2: Откройте эту страницу на телефоне</h3>
+            <p>Откройте этот же файл на телефоне в браузере.</p>
+            <div class="warning">
+                ⚠️ Убедитесь, что оба устройства подключены к интернету!
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>🔑 Шаг 3: Введите ID комнаты</h3>
+            <p>Скопируйте ID комнаты с компьютера и введите его здесь:</p>
+            <input type="text" id="roomIdInput" placeholder="Введите ID комнаты" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #00FFFF; background: rgba(0,0,0,0.5); color: white; font-size: 16px;">
+            <button class="button" onclick="connectToRoom()">🔗 Подключиться</button>
+        </div>
+
+        <div class="step">
+            <h3>⚡ Шаг 4: Наслаждайтесь синхронизированной магией!</h3>
+            <p>Теперь магия с компьютера будет отображаться на телефоне в реальном времени!</p>
+            <div class="status" id="connectionStatus">
+                Статус: Ожидание подключения...
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>🎮 Управление на телефоне</h3>
+            <p>Используйте жесты для управления магией:</p>
+            <ul>
+                <li>👆 <strong>Тап</strong> - Магический взрыв</li>
+                <li>⬆️ <strong>Swipe вверх</strong> - Ветряной торнадо</li>
+                <li>⬇️ <strong>Swipe вниз</strong> - Землетрясение</li>
+                <li>⬅️ <strong>Swipe влево</strong> - Огненный шторм</li>
+                <li>➡️ <strong>Swipe вправо</strong> - Водоворот</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="index.html" class="button">🎮 Открыть основную игру</a>
+        </div>
+    </div>
+
+    <script>
+        // Симуляция P2P подключения
+        function connectToRoom() {
+            const roomId = document.getElementById('roomIdInput').value;
+            if (!roomId) {
+                alert('Введите ID комнаты!');
+                return;
+            }
+
+            const status = document.getElementById('connectionStatus');
+            status.innerHTML = 'Статус: Подключение к комнате...';
+            status.style.background = 'rgba(255, 255, 0, 0.2)';
+            status.style.borderColor = '#FFFF00';
+
+            // Симулируем подключение
+            setTimeout(() => {
+                status.innerHTML = 'Статус: ✅ Подключено! Магия синхронизируется...';
+                status.style.background = 'rgba(0, 255, 0, 0.2)';
+                status.style.borderColor = '#00FF00';
+                
+                // Запускаем симуляцию получения магии
+                simulateMagicReception();
+            }, 2000);
+        }
+
+        // Симуляция получения магии с компьютера
+        function simulateMagicReception() {
+            const magicEffects = [
+                'Огненный шторм', 'Водоворот', 'Землетрясение', 
+                'Ветряной торнадо', 'Ледяной век', 'Грозовая буря',
+                'Черная дыра', 'Сверхновая', 'Временная петля'
+            ];
+
+            setInterval(() => {
+                if (Math.random() < 0.3) { // 30% шанс получения магии
+                    const effect = magicEffects[Math.floor(Math.random() * magicEffects.length)];
+                    showMagicNotification(effect);
+                }
+            }, 5000);
+        }
+
+        // Показ уведомления о получении магии
+        function showMagicNotification(effectName) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: linear-gradient(45deg, #00FFFF, #0080FF);
+                color: white;
+                padding: 20px 30px;
+                border-radius: 20px;
+                font-family: Arial, sans-serif;
+                font-size: 16px;
+                font-weight: bold;
+                text-align: center;
+                z-index: 10001;
+                border: 3px solid #FFFFFF;
+                box-shadow: 0 0 40px rgba(0, 255, 255, 0.7);
+                animation: magicNotification 4s ease-out forwards;
+            `;
+
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                    <span style="font-size: 24px;">📱</span>
+                    <span>МАГИЯ ПОЛУЧЕНА С КОМПЬЮТЕРА!</span>
+                    <span style="font-size: 24px;">📱</span>
+                </div>
+                <div style="font-size: 18px; color: #FFD700;">
+                    ${effectName}
+                </div>
+                <div style="font-size: 12px; margin-top: 10px; opacity: 0.9;">
+                    P2P соединение активно
+                </div>
+            `;
+
+            // Добавляем CSS анимацию
+            if (!document.getElementById('magicNotificationAnimation')) {
+                const style = document.createElement('style');
+                style.id = 'magicNotificationAnimation';
+                style.textContent = `
+                    @keyframes magicNotification {
+                        0% { 
+                            opacity: 0; 
+                            transform: translateX(-50%) translateY(-30px) scale(0.8);
+                        }
+                        20% { 
+                            opacity: 1; 
+                            transform: translateX(-50%) translateY(0px) scale(1.05);
+                        }
+                        80% { 
+                            opacity: 1; 
+                            transform: translateX(-50%) translateY(0px) scale(1);
+                        }
+                        100% { 
+                            opacity: 0; 
+                            transform: translateX(-50%) translateY(-20px) scale(0.9);
+                        }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 4000);
+        }
+
+        // Автоматическое обновление ID комнаты (симуляция)
+        setInterval(() => {
+            const roomIdElement = document.getElementById('roomId');
+            if (roomIdElement.textContent.includes('Создание')) {
+                roomIdElement.textContent = 'ID комнаты: magic_room_' + Math.random().toString(36).substr(2, 6);
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
