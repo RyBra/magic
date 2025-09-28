@@ -552,6 +552,519 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
+    // Функции для магических эффектов
+    function createTreeGrowth() {
+        const container = document.body;
+        const tree = document.createElement('div');
+        tree.style.cssText = `
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 0;
+            background: linear-gradient(to top, #8B4513, #228B22);
+            border-radius: 10px 10px 0 0;
+            z-index: 1000;
+            animation: treeGrowth 3s ease-out forwards;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes treeGrowth {
+                from { height: 0; }
+                to { height: 200px; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(tree);
+        setTimeout(() => tree.remove(), 5000);
+    }
+    
+    function createFlowerBloom() {
+        const container = document.body;
+        for (let i = 0; i < 10; i++) {
+            const flower = document.createElement('div');
+            flower.style.cssText = `
+                position: fixed;
+                left: ${Math.random() * window.innerWidth}px;
+                top: ${Math.random() * window.innerHeight}px;
+                width: 20px;
+                height: 20px;
+                background: radial-gradient(circle, #FF69B4, #FFB6C1);
+                border-radius: 50%;
+                z-index: 1000;
+                animation: flowerBloom 2s ease-out forwards;
+            `;
+            
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes flowerBloom {
+                    0% { transform: scale(0); opacity: 0; }
+                    50% { transform: scale(1.2); opacity: 1; }
+                    100% { transform: scale(1); opacity: 0.8; }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            container.appendChild(flower);
+            setTimeout(() => flower.remove(), 3000);
+        }
+    }
+    
+    function createChaosVortex() {
+        const container = document.body;
+        const vortex = document.createElement('div');
+        vortex.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            border: 3px solid #FF00FF;
+            border-radius: 50%;
+            z-index: 1000;
+            animation: chaosVortex 4s linear infinite;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes chaosVortex {
+                0% { transform: translate(-50%, -50%) rotate(0deg) scale(0.5); }
+                50% { transform: translate(-50%, -50%) rotate(180deg) scale(1.5); }
+                100% { transform: translate(-50%, -50%) rotate(360deg) scale(0.5); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(vortex);
+        setTimeout(() => vortex.remove(), 5000);
+    }
+    
+    function createUniverseCreation() {
+        const container = document.body;
+        const universe = document.createElement('div');
+        universe.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, #000011, #000033, #000066);
+            border-radius: 50%;
+            z-index: 1000;
+            animation: universeCreation 6s ease-out forwards;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes universeCreation {
+                0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+                50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+                100% { transform: translate(-50%, -50%) scale(1); opacity: 0.9; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(universe);
+        setTimeout(() => universe.remove(), 8000);
+    }
+    
+    function createMemoryWipe() {
+        const container = document.body;
+        const wipe = document.createElement('div');
+        wipe.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #FFFFFF, #F0F0F0);
+            z-index: 1000;
+            animation: memoryWipe 3s ease-out forwards;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes memoryWipe {
+                0% { opacity: 0; }
+                50% { opacity: 0.8; }
+                100% { opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(wipe);
+        setTimeout(() => wipe.remove(), 4000);
+    }
+    
+    function createSeasonChange() {
+        const container = document.body;
+        const season = document.createElement('div');
+        const colors = ['#FFE4B5', '#87CEEB', '#90EE90', '#FFB6C1'];
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        
+        season.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: ${color};
+            z-index: 1000;
+            animation: seasonChange 4s ease-out forwards;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes seasonChange {
+                0% { opacity: 0; }
+                50% { opacity: 0.3; }
+                100% { opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(season);
+        setTimeout(() => season.remove(), 5000);
+    }
+    
+    function createDreamRealm() {
+        const container = document.body;
+        const dream = document.createElement('div');
+        dream.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, #E6E6FA, #DDA0DD, #DA70D6);
+            border-radius: 50%;
+            z-index: 1000;
+            animation: dreamRealm 5s ease-out forwards;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes dreamRealm {
+                0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; }
+                50% { transform: translate(-50%, -50%) scale(1.1) rotate(180deg); opacity: 0.8; }
+                100% { transform: translate(-50%, -50%) scale(1) rotate(360deg); opacity: 0.6; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(dream);
+        setTimeout(() => dream.remove(), 6000);
+    }
+    
+    function createQuantumFoam() {
+        const container = document.body;
+        for (let i = 0; i < 20; i++) {
+            const foam = document.createElement('div');
+            foam.style.cssText = `
+                position: fixed;
+                left: ${Math.random() * window.innerWidth}px;
+                top: ${Math.random() * window.innerHeight}px;
+                width: 10px;
+                height: 10px;
+                background: #00FFFF;
+                border-radius: 50%;
+                z-index: 1000;
+                animation: quantumFoam 3s ease-out forwards;
+            `;
+            
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes quantumFoam {
+                    0% { transform: scale(0); opacity: 0; }
+                    50% { transform: scale(1.5); opacity: 1; }
+                    100% { transform: scale(0.5); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            container.appendChild(foam);
+            setTimeout(() => foam.remove(), 4000);
+        }
+    }
+    
+    function createAnimalSummon() {
+        const container = document.body;
+        const animal = document.createElement('div');
+        animal.style.cssText = `
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            background: #8B4513;
+            border-radius: 50%;
+            z-index: 1000;
+            animation: animalSummon 3s ease-out forwards;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes animalSummon {
+                0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+                50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+                100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(animal);
+        setTimeout(() => animal.remove(), 4000);
+    }
+    
+    function spawnMagicCrystals() {
+        const container = document.body;
+        for (let i = 0; i < 15; i++) {
+            const crystal = document.createElement('div');
+            crystal.style.cssText = `
+                position: fixed;
+                left: ${Math.random() * window.innerWidth}px;
+                top: ${Math.random() * window.innerHeight}px;
+                width: 15px;
+                height: 15px;
+                background: linear-gradient(45deg, #FFD700, #FFA500);
+                transform: rotate(45deg);
+                z-index: 1000;
+                animation: magicCrystal 4s ease-out forwards;
+            `;
+            
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes magicCrystal {
+                    0% { transform: rotate(45deg) scale(0); opacity: 0; }
+                    50% { transform: rotate(45deg) scale(1.3); opacity: 1; }
+                    100% { transform: rotate(45deg) scale(1); opacity: 0.7; }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            container.appendChild(crystal);
+            setTimeout(() => crystal.remove(), 5000);
+        }
+    }
+    
+    function createWeatherControl() {
+        const container = document.body;
+        const weather = document.createElement('div');
+        weather.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #87CEEB, #B0C4DE);
+            z-index: 1000;
+            animation: weatherControl 4s ease-out forwards;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes weatherControl {
+                0% { opacity: 0; }
+                50% { opacity: 0.4; }
+                100% { opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(weather);
+        setTimeout(() => weather.remove(), 5000);
+    }
+    
+    function createTelepathy() {
+        const container = document.body;
+        const telepathy = document.createElement('div');
+        telepathy.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            border: 2px solid #8A2BE2;
+            border-radius: 50%;
+            z-index: 1000;
+            animation: telepathy 3s ease-out forwards;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes telepathy {
+                0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+                50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
+                100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(telepathy);
+        setTimeout(() => telepathy.remove(), 4000);
+    }
+    
+    function createNatureSpirits() {
+        const container = document.body;
+        for (let i = 0; i < 8; i++) {
+            const spirit = document.createElement('div');
+            spirit.style.cssText = `
+                position: fixed;
+                left: ${Math.random() * window.innerWidth}px;
+                top: ${Math.random() * window.innerHeight}px;
+                width: 25px;
+                height: 25px;
+                background: radial-gradient(circle, #90EE90, #32CD32);
+                border-radius: 50%;
+                z-index: 1000;
+                animation: natureSpirit 4s ease-out forwards;
+            `;
+            
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes natureSpirit {
+                    0% { transform: scale(0) rotate(0deg); opacity: 0; }
+                    50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+                    100% { transform: scale(1) rotate(360deg); opacity: 0.6; }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            container.appendChild(spirit);
+            setTimeout(() => spirit.remove(), 5000);
+        }
+    }
+    
+    function createRealityBreak() {
+        const container = document.body;
+        const reality = document.createElement('div');
+        reality.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                45deg,
+                #FF0000,
+                #FF0000 10px,
+                #000000 10px,
+                #000000 20px
+            );
+            z-index: 1000;
+            animation: realityBreak 3s ease-out forwards;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes realityBreak {
+                0% { opacity: 0; }
+                50% { opacity: 0.6; }
+                100% { opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(reality);
+        setTimeout(() => reality.remove(), 4000);
+    }
+    
+    function createMindControl() {
+        const container = document.body;
+        const mind = document.createElement('div');
+        mind.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, #FF1493, #8B008B);
+            border-radius: 50%;
+            z-index: 1000;
+            animation: mindControl 3s ease-out forwards;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes mindControl {
+                0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+                50% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.9; }
+                100% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(mind);
+        setTimeout(() => mind.remove(), 4000);
+    }
+    
+    function createIllusion() {
+        const container = document.body;
+        const illusion = document.createElement('div');
+        illusion.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(45deg, #FF00FF, #00FFFF, #FFFF00);
+            border-radius: 20px;
+            z-index: 1000;
+            animation: illusion 4s ease-out forwards;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes illusion {
+                0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; }
+                50% { transform: translate(-50%, -50%) scale(1.1) rotate(180deg); opacity: 0.8; }
+                100% { transform: translate(-50%, -50%) scale(1) rotate(360deg); opacity: 0.5; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(illusion);
+        setTimeout(() => illusion.remove(), 5000);
+    }
+    
+    function createOmnipotence() {
+        const container = document.body;
+        const omnipotence = document.createElement('div');
+        omnipotence.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #FFD700, #FFA500, #FF8C00);
+            z-index: 1000;
+            animation: omnipotence 5s ease-out forwards;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes omnipotence {
+                0% { opacity: 0; }
+                50% { opacity: 0.7; }
+                100% { opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        container.appendChild(omnipotence);
+        setTimeout(() => omnipotence.remove(), 6000);
+    }
+
     // Система весовых коэффициентов для эффектов
     const magicEffects = {
         // Обычные эффекты (вес 10)
@@ -3285,14 +3798,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Инициализация симуляции сети
     function initializeNetworkSimulation() {
-        // Симулируем подключение к сети
-        setTimeout(() => {
-            magicNetwork.isConnected = true;
-            updateNetworkStatus('Подключен');
-            
-            // Симулируем получение магии от других игроков
-            simulateIncomingMagic();
-        }, 1000);
+        // Отключено: симуляция сети не используется
     }
     
     // Добавление виртуальных игроков для демонстрации
@@ -3337,28 +3843,40 @@ document.addEventListener('DOMContentLoaded', function() {
         
         p2pPanel.innerHTML = `
             <div style="color: #00FFFF; font-weight: bold; margin-bottom: 15px; text-align: center;">
-                🌍 ГЛОБАЛЬНАЯ P2P СЕТЬ
+                🌍 P2P СЕТЬ (WebRTC)
             </div>
-            <div>Статус: <span id="p2pConnectionStatus" style="color: #FF0000;">Подключение...</span></div>
+            <div>Статус: <span id="p2pConnectionStatus" style="color: #FF0000;">Ожидание...</span></div>
             <div>STUN сервер: <span id="stunServerStatus" style="color: #FFD700;">Проверка...</span></div>
-            <div>Подключенных: <span id="connectedPeersCount" style="color: #00FF00;">0</span></div>
-            <div style="margin-top: 15px;">
-                <div style="color: #FF69B4; font-weight: bold;">ID комнаты:</div>
-                <div id="roomIdDisplay" style="color: #FFD700; font-size: 12px; word-break: break-all;">Создание...</div>
+            <div>Подключенных пиров: <span id="connectedPeersCount" style="color: #00FF00;">0</span></div>
+            <div style="margin-top: 15px; font-size: 12px; color: #CCC;">
+                Ручной сигналинг: обмен оффером/ответом между устройствами
             </div>
-            <div style="margin-top: 15px;">
-                <div style="color: #00FF00; font-weight: bold; text-align: center; padding: 10px; background: rgba(0, 255, 0, 0.1); border-radius: 5px; border: 1px solid #00FF00;">
-                    ✅ АВТОМАТИЧЕСКОЕ ПОДКЛЮЧЕНИЕ
+            <div style="margin-top: 12px; display: grid; gap: 10px;">
+                <button id="btnCreateOffer" style="padding:8px 10px; border-radius:8px; border:1px solid #00FFFF; background:rgba(0,255,255,0.1); color:#00FFFF; font-weight:bold; cursor:pointer;">Создать оффер</button>
+                <textarea id="localOffer" placeholder="Локальный оффер (скопируйте)" style="width:100%; min-height:80px; border-radius:8px; border:1px solid #00FFFF; background:rgba(0,0,0,0.4); color:#0f0; padding:8px;"></textarea>
+                <div style="display:flex; gap:8px;">
+                    <button id="btnCopyOffer" style="flex:1; padding:8px; border-radius:8px; border:1px solid #00FF00; background:rgba(0,255,0,0.1); color:#00FF00; font-weight:bold; cursor:pointer;">Копировать оффер</button>
                 </div>
-            </div>
-            <div style="margin-top: 15px; font-size: 12px; color: #CCC; text-align: center;">
-                Реальные игроки через STUN сервер
+                <textarea id="remoteOffer" placeholder="Вставьте оффер другого устройства" style="width:100%; min-height:80px; border-radius:8px; border:1px solid #FFD700; background:rgba(0,0,0,0.4); color:#ff0; padding:8px;"></textarea>
+                <button id="btnAcceptOffer" style="padding:8px 10px; border-radius:8px; border:1px solid #FFD700; background:rgba(255,215,0,0.1); color:#FFD700; font-weight:bold; cursor:pointer;">Принять оффер (создать ответ)</button>
+                <textarea id="localAnswer" placeholder="Локальный ответ (скопируйте)" style="width:100%; min-height:80px; border-radius:8px; border:1px solid #00FF00; background:rgba(0,0,0,0.4); color:#0f0; padding:8px;"></textarea>
+                <div style="display:flex; gap:8px;">
+                    <button id="btnCopyAnswer" style="flex:1; padding:8px; border-radius:8px; border:1px solid #00FF00; background:rgba(0,255,0,0.1); color:#00FF00; font-weight:bold; cursor:pointer;">Копировать ответ</button>
+                </div>
+                <textarea id="remoteAnswer" placeholder="Вставьте ответ другого устройства" style="width:100%; min-height:80px; border-radius:8px; border:1px solid #FFD700; background:rgba(0,0,0,0.4); color:#ff0; padding:8px;"></textarea>
+                <button id="btnAcceptAnswer" style="padding:8px 10px; border-radius:8px; border:1px solid #FFD700; background:rgba(255,215,0,0.1); color:#FFD700; font-weight:bold; cursor:pointer;">Принять ответ (завершить)</button>
             </div>
         `;
         
         document.body.appendChild(p2pPanel);
         
-        // Автоматическое подключение - обработчики не нужны
+        // Привязываем обработчики для ручного сигналинга
+        const byId = (id) => document.getElementById(id);
+        byId('btnCreateOffer').onclick = () => createWebRTCOffer();
+        byId('btnCopyOffer').onclick = () => copyFrom('localOffer');
+        byId('btnAcceptOffer').onclick = () => handleRemoteOffer();
+        byId('btnCopyAnswer').onclick = () => copyFrom('localAnswer');
+        byId('btnAcceptAnswer').onclick = () => handleRemoteAnswer();
     }
     
     // Инициализация WebRTC
@@ -3372,8 +3890,183 @@ document.addEventListener('DOMContentLoaded', function() {
         // Тестируем STUN серверы
         testSTUNServers();
         
-        // Создаем комнату по умолчанию
+        // Подготовка к ручному сигналингу
         createDefaultRoom();
+    }
+
+    // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ РУЧНОГО СИГНАЛИНГА WebRTC
+    const manualPeerKey = 'manual_peer';
+    let manualGatherTarget = null; // 'offer' | 'answer'
+
+    function createPeerConnection() {
+        const pc = new RTCPeerConnection({ iceServers: realP2PNetwork.iceServers });
+        pc.onconnectionstatechange = () => {
+            if (pc.connectionState === 'connected') {
+                updateP2PStatus('Подключен (WebRTC)');
+            } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+                updateP2PStatus('Отключен');
+            }
+        };
+        pc.onicegatheringstatechange = () => {
+            if (pc.iceGatheringState === 'complete') {
+                // Когда закончилась сборка ICE — кладем описание туда, куда ожидали
+                if (manualGatherTarget === 'offer') {
+                    const box = document.getElementById('localOffer');
+                    if (box && pc.localDescription) {
+                        box.value = JSON.stringify(pc.localDescription);
+                    }
+                }
+                if (manualGatherTarget === 'answer') {
+                    const box = document.getElementById('localAnswer');
+                    if (box && pc.localDescription) {
+                        box.value = JSON.stringify(pc.localDescription);
+                    }
+                }
+            }
+        };
+        pc.ondatachannel = (event) => {
+            const channel = event.channel;
+            setupDataChannel(channel);
+            realP2PNetwork.dataChannels.set(manualPeerKey, channel);
+            updateConnectedPeersCount();
+        };
+        realP2PNetwork.peerConnections.set(manualPeerKey, pc);
+        return pc;
+    }
+
+    function setupDataChannel(channel) {
+        channel.onopen = () => {
+            updateP2PStatus('Канал данных открыт');
+            updateConnectedPeersCount();
+        };
+        channel.onclose = () => {
+            updateP2PStatus('Канал данных закрыт');
+            updateConnectedPeersCount();
+        };
+        channel.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                if (data && data.type === 'magic_cast' && data.effectName) {
+                    const effect = findEffectByName(data.effectName);
+                    if (effect && typeof effect.effect === 'function') {
+                        showMagicInfo(`Магия от ${data.playerName || 'Игрок'}: ${effect.name}`);
+                        effect.effect();
+                    }
+                }
+            } catch (e) {
+                console.warn('Не удалось разобрать сообщение канала:', e);
+            }
+        };
+    }
+
+    function findEffectByName(effectName) {
+        try {
+            const categories = Object.values(magicEffects);
+            for (const category of categories) {
+                for (const effect of category) {
+                    if (effect.name === effectName) return effect;
+                }
+            }
+        } catch (_) {}
+        return null;
+    }
+
+    function createWebRTCOffer() {
+        const existing = realP2PNetwork.peerConnections.get(manualPeerKey);
+        if (existing) {
+            try { existing.close(); } catch (_) {}
+            realP2PNetwork.peerConnections.delete(manualPeerKey);
+        }
+        const pc = createPeerConnection();
+        // Создаем локальный дата-канал, мы — инициатор
+        const channel = pc.createDataChannel('magic');
+        setupDataChannel(channel);
+        realP2PNetwork.dataChannels.set(manualPeerKey, channel);
+        manualGatherTarget = 'offer';
+        pc.createOffer({ offerToReceiveAudio: false, offerToReceiveVideo: false }).then(offer => {
+            return pc.setLocalDescription(offer);
+        }).then(() => {
+            updateP2PStatus('Оффер создан, дождитесь ICE и скопируйте его');
+        }).catch(err => {
+            updateP2PStatus('Ошибка создания оффера');
+            console.error(err);
+        });
+    }
+
+    function handleRemoteOffer() {
+        const box = document.getElementById('remoteOffer');
+        if (!box || !box.value.trim()) {
+            alert('Вставьте оффер другой стороны');
+            return;
+        }
+        let desc;
+        try {
+            desc = JSON.parse(box.value.trim());
+        } catch (e) {
+            updateP2PStatus('Неверный формат оффера');
+            return;
+        }
+
+        const pc = createPeerConnection();
+        pc.setRemoteDescription(desc).then(() => {
+            manualGatherTarget = 'answer';
+            return pc.createAnswer();
+        }).then(answer => pc.setLocalDescription(answer)).then(() => {
+            updateP2PStatus('Ответ создан, дождитесь ICE и скопируйте его');
+        }).catch(err => {
+            updateP2PStatus('Ошибка обработки оффера');
+            console.error(err);
+        });
+    }
+
+    function handleRemoteAnswer() {
+        const pc = realP2PNetwork.peerConnections.get(manualPeerKey);
+        if (!pc) {
+            alert('Сначала создайте оффер');
+            return;
+        }
+        const box = document.getElementById('remoteAnswer');
+        if (!box || !box.value.trim()) {
+            alert('Вставьте ответ другой стороны');
+            return;
+        }
+        let desc;
+        try {
+            desc = JSON.parse(box.value.trim());
+        } catch (e) {
+            updateP2PStatus('Неверный формат ответа');
+            return;
+        }
+        pc.setRemoteDescription(desc).then(() => {
+            updateP2PStatus('Подключение устанавливается...');
+        }).catch(err => {
+            updateP2PStatus('Ошибка применения ответа');
+            console.error(err);
+        });
+    }
+
+    function copyFrom(textareaId) {
+        const el = document.getElementById(textareaId);
+        if (!el) return;
+        const text = el.value || '';
+        if (!text) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                updateP2PStatus('Скопировано в буфер обмена');
+            }).catch(() => {
+                try {
+                    el.select();
+                    document.execCommand('copy');
+                    updateP2PStatus('Скопировано');
+                } catch (_) {}
+            });
+        } else {
+            try {
+                el.select();
+                document.execCommand('copy');
+                updateP2PStatus('Скопировано');
+            } catch (_) {}
+        }
     }
     
     // Тестирование STUN серверов
@@ -3419,22 +4112,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Создание глобальной комнаты для всех
     function createDefaultRoom() {
-        // Все игроки автоматически подключаются к одной глобальной комнате
-        realP2PNetwork.roomId = 'GLOBAL_MAGIC_ROOM';
-        realP2PNetwork.isHost = false; // Все равны в глобальной комнате
-        
+        // Без авто-комнаты; просто ставим псевдо-идентификатор сессии для справки
+        realP2PNetwork.roomId = 'MANUAL_SIGNALING';
         const roomIdDisplay = document.getElementById('roomIdDisplay');
         if (roomIdDisplay) {
             roomIdDisplay.textContent = realP2PNetwork.roomId;
         }
-        
-        updateP2PStatus('Подключение к глобальной комнате...');
-        
-        // Автоматически подключаемся к глобальной комнате
-        setTimeout(() => {
-            updateP2PStatus('Подключен к глобальной комнате');
-            startGlobalRoomConnection();
-        }, 2000);
+        updateP2PStatus('Готов к ручному сигналингу');
     }
     
     // Система комнат
@@ -3445,58 +4129,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Запуск подключения к глобальной комнате
     function startGlobalRoomConnection() {
-        console.log('🌍 Подключение к глобальной комнате...');
-        
-        // Симулируем подключение к глобальной комнате
-        setTimeout(() => {
-            // Добавляем себя в глобальную комнату
-            const myPeerId = 'player_' + Math.random().toString(36).substr(2, 6);
-            realP2PNetwork.connectedPeers.set(myPeerId, {
-                id: myPeerId,
-                name: playerName,
-                connectedAt: Date.now(),
-                isActive: true,
-                isMe: true
-            });
-            
-            updateConnectedPeersCount();
-            showGlobalRoomWelcome();
-            
-            // Запускаем симуляцию других игроков в глобальной комнате
-            simulateGlobalRoomPlayers();
-            
-        }, 1000);
+        console.log('🌍 Ручной режим: ожидание оффера/ответа');
+        // Ничего не делаем автоматически; подключение через UI ручного сигналинга
     }
     
     // Симуляция игроков в глобальной комнате
     function simulateGlobalRoomPlayers() {
-        // Симулируем подключение других игроков к глобальной комнате
-        setInterval(() => {
-            if (Math.random() < 0.15) { // 15% шанс подключения нового игрока
-                const peerId = 'player_' + Math.random().toString(36).substr(2, 6);
-                const playerNames = [
-                    'Маг_Алекс', 'Маг_Мария', 'Маг_Дмитрий', 'Маг_Анна',
-                    'Маг_Сергей', 'Маг_Елена', 'Маг_Андрей', 'Маг_Ольга',
-                    'Маг_Иван', 'Маг_Катя', 'Маг_Максим', 'Маг_Настя'
-                ];
-                
-                realP2PNetwork.connectedPeers.set(peerId, {
-                    id: peerId,
-                    name: playerNames[Math.floor(Math.random() * playerNames.length)],
-                    connectedAt: Date.now(),
-                    isActive: true,
-                    isMe: false
-                });
-                
-                updateConnectedPeersCount();
-                showPeerConnectedNotification(peerId);
-                
-                // Симулируем магию от нового игрока
-                setTimeout(() => {
-                    simulateMagicFromPeer(peerId);
-                }, Math.random() * 5000 + 2000);
-            }
-        }, 8000);
+        // Отключено: больше не создаем фейковых игроков
     }
     
     // Показ приветствия в глобальной комнате
@@ -3524,14 +4163,14 @@ document.addEventListener('DOMContentLoaded', function() {
         notification.innerHTML = `
             <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
                 <span style="font-size: 32px;">🌍</span>
-                <span>ДОБРО ПОЖАЛОВАТЬ В ГЛОБАЛЬНУЮ КОМНАТУ!</span>
+                <span>РЕЖИМ P2P: РУЧНОЙ СИГНАЛИНГ</span>
                 <span style="font-size: 32px;">🌍</span>
             </div>
             <div style="font-size: 16px; color: #FFD700; margin-bottom: 10px;">
-                Все игроки автоматически подключены
+                Создайте оффер и обменяйтесь данными между устройствами
             </div>
             <div style="font-size: 14px; opacity: 0.9;">
-                Магия всех игроков синхронизируется в реальном времени
+                После установления канала данные будут синхронизироваться
             </div>
         `;
         
@@ -3571,39 +4210,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     }
     
-    // Функция joinRoom удалена - автоматическое подключение к глобальной комнате
+    // Функция joinRoom не используется в ручном режиме сигналинга
     
     // Симуляция P2P соединения (для демо)
     function simulatePeerConnection() {
-        const peerId = 'peer_' + Math.random().toString(36).substr(2, 6);
-        
-        realP2PNetwork.connectedPeers.set(peerId, {
-            id: peerId,
-            name: 'Игрок_' + Math.floor(Math.random() * 1000),
-            connectedAt: Date.now(),
-            isActive: true
-        });
-        
-        updateConnectedPeersCount();
-        showPeerConnectedNotification(peerId);
-        
-        // Симулируем получение магии от пира
-        setTimeout(() => {
-            simulateMagicFromPeer(peerId);
-        }, 5000);
+        // Отключено: больше не создаем фейковые P2P соединения
     }
     
     // Ожидание подключений
     function startWaitingForConnections() {
         // В реальной системе здесь был бы WebSocket для сигналинга
-        console.log('⏳ Ожидание P2P подключений...');
-        
-        // Симулируем случайные подключения
-        setInterval(() => {
-            if (Math.random() < 0.1) { // 10% шанс подключения
-                simulatePeerConnection();
-            }
-        }, 10000);
+        console.log('⏳ Ожидание P2P подключений (ручной режим)...');
     }
     
     // Обновление статуса P2P
@@ -3619,7 +4236,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateConnectedPeersCount() {
         const countElement = document.getElementById('connectedPeersCount');
         if (countElement) {
-            countElement.textContent = realP2PNetwork.connectedPeers.size;
+            const activeChannels = Array.from(realP2PNetwork.dataChannels.values()).filter(dc => dc && dc.readyState === 'open').length;
+            countElement.textContent = String(activeChannels);
         }
     }
     
@@ -3637,18 +4255,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Симуляция магии от пира
     function simulateMagicFromPeer(peerId) {
-        const peer = realP2PNetwork.connectedPeers.get(peerId);
-        if (!peer) return;
-        
-        const allEffects = [];
-        Object.values(magicEffects).forEach(category => {
-            category.forEach(effect => allEffects.push(effect));
-        });
-        
-        const randomEffect = allEffects[Math.floor(Math.random() * allEffects.length)];
-        
-        // Показываем уведомление о магии от пира
-        showMagicFromPeer(peer, randomEffect);
+        // Отключено: больше не симулируем магию от фейковых пиров
     }
     
     // Показ магии от пира
@@ -3683,7 +4290,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 ${effect.name}
             </div>
             <div style="font-size: 12px; margin-top: 10px; opacity: 0.9;">
-                P2P соединение через STUN
+                Прямое P2P через WebRTC
             </div>
         `;
         
@@ -3725,8 +4332,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Показ уведомления о подключении пира
     function showPeerConnectedNotification(peerId) {
-        const peer = realP2PNetwork.connectedPeers.get(peerId);
-        if (!peer) return;
+        // В ручном режиме выводим простое уведомление
+        const peer = realP2PNetwork.connectedPeers.get(peerId) || { name: 'Peer' };
         
         const notification = document.createElement('div');
         notification.style.cssText = `
@@ -3753,7 +4360,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span>${peer.name} подключен!</span>
             </div>
             <div style="font-size: 12px; margin-top: 5px; opacity: 0.9;">
-                P2P через STUN сервер
+                WebRTC дата-канал установлен
             </div>
         `;
         
@@ -3819,10 +4426,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 🌍 ГЛОБАЛЬНАЯ P2P СЕТЬ 🌍
             </div>
             <div style="margin-bottom: 10px;">
-                <div>• Автоматическое подключение к глобальной комнате</div>
-                <div>• Все игроки в одной комнате</div>
+                <div>• Ручной обмен оффером/ответом (без сервера сигналинга)</div>
                 <div>• Прямая связь через STUN серверы</div>
-                <div>• Магия синхронизируется со всеми</div>
+                <div>• Магия синхронизируется по каналу данных</div>
             </div>
             <div style="color: #FFD700; font-weight: bold; margin-top: 15px;">
                 Просто запустите игру - подключение автоматическое! ✨
@@ -3869,10 +4475,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.head.appendChild(style);
         }
         
-        setTimeout(() => {
-            // Обновляем статистику
-            updateLastMagicEffect(`${player.name}: ${effect.name}`);
-        }, networkSimulation.latency);
+        // Убрана ссылка на несуществующие переменные
     }
     
     // Показ магии от другого игрока
@@ -3949,25 +4552,25 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Отправка магии другим игрокам
     function sendMagicToPlayers(effect) {
-        if (!magicNetwork.isConnected) return;
-        
-        const magicData = {
+        // Отправляем через открытые дата-каналы WebRTC
+        const payload = JSON.stringify({
             type: 'magic_cast',
             playerId: playerId,
             playerName: playerName,
             effectName: effect.name,
             timestamp: Date.now(),
             level: magicLevel
-        };
-        
-        // Симулируем отправку в сеть
-        setTimeout(() => {
-            // В реальной системе здесь был бы WebSocket.send()
-            console.log('Отправка магии в сеть:', magicData);
-            
-            // Обновляем статистику
-            updateLastMagicEffect(`Вы: ${effect.name}`);
-        }, networkSimulation.latency);
+        });
+        let sent = 0;
+        realP2PNetwork.dataChannels.forEach(dc => {
+            try {
+                if (dc && dc.readyState === 'open') { dc.send(payload); sent++; }
+            } catch (_) {}
+        });
+        if (sent === 0) {
+            console.log('Нет открытых P2P каналов для отправки.');
+        }
+        updateLastMagicEffect(`Вы: ${effect.name}`);
     }
     
     // Обновление статуса сети
@@ -12925,516 +13528,4 @@ document.addEventListener('DOMContentLoaded', function() {
     // Логируем успешную загрузку
     console.log('Виртуальная дверь создана! Вы можете войти в несуществующий мир...');
     
-    // Missing function definitions
-    function createTreeGrowth() {
-        const container = document.body;
-        const tree = document.createElement('div');
-        tree.style.cssText = `
-            position: fixed;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 20px;
-            height: 0;
-            background: linear-gradient(to top, #8B4513, #228B22);
-            border-radius: 10px 10px 0 0;
-            z-index: 1000;
-            animation: treeGrowth 3s ease-out forwards;
-        `;
-        
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes treeGrowth {
-                from { height: 0; }
-                to { height: 200px; }
-            }
-        `;
-        document.head.appendChild(style);
-        
-        container.appendChild(tree);
-        setTimeout(() => tree.remove(), 5000);
-    }
-    
-    function createFlowerBloom() {
-        const container = document.body;
-        for (let i = 0; i < 10; i++) {
-            const flower = document.createElement('div');
-            flower.style.cssText = `
-                position: fixed;
-                left: ${Math.random() * window.innerWidth}px;
-                top: ${Math.random() * window.innerHeight}px;
-                width: 20px;
-                height: 20px;
-                background: radial-gradient(circle, #FF69B4, #FFB6C1);
-                border-radius: 50%;
-                z-index: 1000;
-                animation: flowerBloom 2s ease-out forwards;
-            `;
-            
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes flowerBloom {
-                    0% { transform: scale(0); opacity: 0; }
-                    50% { transform: scale(1.2); opacity: 1; }
-                    100% { transform: scale(1); opacity: 0.8; }
-                }
-            `;
-            document.head.appendChild(style);
-            
-            container.appendChild(flower);
-            setTimeout(() => flower.remove(), 3000);
-        }
-    }
-    
-    function createChaosVortex() {
-        const container = document.body;
-        const vortex = document.createElement('div');
-        vortex.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 300px;
-            height: 300px;
-            border: 3px solid #FF00FF;
-            border-radius: 50%;
-            z-index: 1000;
-            animation: chaosVortex 4s linear infinite;
-        `;
-        
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes chaosVortex {
-                0% { transform: translate(-50%, -50%) rotate(0deg) scale(0.5); }
-                50% { transform: translate(-50%, -50%) rotate(180deg) scale(1.5); }
-                100% { transform: translate(-50%, -50%) rotate(360deg) scale(0.5); }
-            }
-        `;
-        document.head.appendChild(style);
-        
-        container.appendChild(vortex);
-        setTimeout(() => vortex.remove(), 5000);
-    }
-    
-    function createUniverseCreation() {
-        const container = document.body;
-        const universe = document.createElement('div');
-        universe.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, #000011, #000033, #000066);
-            border-radius: 50%;
-            z-index: 1000;
-            animation: universeCreation 6s ease-out forwards;
-        `;
-        
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes universeCreation {
-                0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-                50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-                100% { transform: translate(-50%, -50%) scale(1); opacity: 0.9; }
-            }
-        `;
-        document.head.appendChild(style);
-        
-        container.appendChild(universe);
-        setTimeout(() => universe.remove(), 8000);
-    }
-    
-    function createMemoryWipe() {
-        const container = document.body;
-        const wipe = document.createElement('div');
-        wipe.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, #FFFFFF, #F0F0F0);
-            z-index: 1000;
-            animation: memoryWipe 3s ease-out forwards;
-        `;
-        
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes memoryWipe {
-                0% { opacity: 0; }
-                50% { opacity: 0.8; }
-                100% { opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
-        
-        container.appendChild(wipe);
-        setTimeout(() => wipe.remove(), 4000);
-    }
-    
-    function createSeasonChange() {
-        const container = document.body;
-        const season = document.createElement('div');
-        const colors = ['#FFE4B5', '#87CEEB', '#90EE90', '#FFB6C1'];
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        
-        season.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: ${color};
-            z-index: 1000;
-            animation: seasonChange 4s ease-out forwards;
-        `;
-        
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes seasonChange {
-                0% { opacity: 0; }
-                50% { opacity: 0.3; }
-                100% { opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
-        
-        container.appendChild(season);
-        setTimeout(() => season.remove(), 5000);
-    }
-    
-    function createDreamRealm() {
-        const container = document.body;
-        const dream = document.createElement('div');
-        dream.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, #E6E6FA, #DDA0DD, #DA70D6);
-            border-radius: 50%;
-            z-index: 1000;
-            animation: dreamRealm 5s ease-out forwards;
-        `;
-        
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes dreamRealm {
-                0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; }
-                50% { transform: translate(-50%, -50%) scale(1.1) rotate(180deg); opacity: 0.8; }
-                100% { transform: translate(-50%, -50%) scale(1) rotate(360deg); opacity: 0.6; }
-            }
-        `;
-        document.head.appendChild(style);
-        
-        container.appendChild(dream);
-        setTimeout(() => dream.remove(), 6000);
-    }
-    
-    function createQuantumFoam() {
-        const container = document.body;
-        for (let i = 0; i < 20; i++) {
-            const foam = document.createElement('div');
-            foam.style.cssText = `
-                position: fixed;
-                left: ${Math.random() * window.innerWidth}px;
-                top: ${Math.random() * window.innerHeight}px;
-                width: 10px;
-                height: 10px;
-                background: #00FFFF;
-                border-radius: 50%;
-                z-index: 1000;
-                animation: quantumFoam 3s ease-out forwards;
-            `;
-            
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes quantumFoam {
-                    0% { transform: scale(0); opacity: 0; }
-                    50% { transform: scale(1.5); opacity: 1; }
-                    100% { transform: scale(0.5); opacity: 0; }
-                }
-            `;
-            document.head.appendChild(style);
-            
-            container.appendChild(foam);
-            setTimeout(() => foam.remove(), 4000);
-        }
-    }
-    
-    function createAnimalSummon() {
-        const container = document.body;
-        const animal = document.createElement('div');
-        animal.style.cssText = `
-            position: fixed;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            width: 50px;
-            height: 50px;
-            background: #8B4513;
-            border-radius: 50%;
-            z-index: 1000;
-            animation: animalSummon 3s ease-out forwards;
-        `;
-        
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes animalSummon {
-                0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-                50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-                100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
-            }
-        `;
-        document.head.appendChild(style);
-        
-        container.appendChild(animal);
-        setTimeout(() => animal.remove(), 4000);
-    }
-    
-    function spawnMagicCrystals() {
-        const container = document.body;
-        for (let i = 0; i < 15; i++) {
-            const crystal = document.createElement('div');
-            crystal.style.cssText = `
-                position: fixed;
-                left: ${Math.random() * window.innerWidth}px;
-                top: ${Math.random() * window.innerHeight}px;
-                width: 15px;
-                height: 15px;
-                background: linear-gradient(45deg, #FFD700, #FFA500);
-                transform: rotate(45deg);
-                z-index: 1000;
-                animation: magicCrystal 4s ease-out forwards;
-            `;
-            
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes magicCrystal {
-                    0% { transform: rotate(45deg) scale(0); opacity: 0; }
-                    50% { transform: rotate(45deg) scale(1.3); opacity: 1; }
-                    100% { transform: rotate(45deg) scale(1); opacity: 0.7; }
-                }
-            `;
-            document.head.appendChild(style);
-            
-            container.appendChild(crystal);
-            setTimeout(() => crystal.remove(), 5000);
-        }
-    }
-    
-    function createWeatherControl() {
-        const container = document.body;
-        const weather = document.createElement('div');
-        weather.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(180deg, #87CEEB, #B0C4DE);
-            z-index: 1000;
-            animation: weatherControl 4s ease-out forwards;
-        `;
-        
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes weatherControl {
-                0% { opacity: 0; }
-                50% { opacity: 0.4; }
-                100% { opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
-        
-        container.appendChild(weather);
-        setTimeout(() => weather.remove(), 5000);
-    }
-    
-    function createTelepathy() {
-        const container = document.body;
-        const telepathy = document.createElement('div');
-        telepathy.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 200px;
-            height: 200px;
-            border: 2px solid #8A2BE2;
-            border-radius: 50%;
-            z-index: 1000;
-            animation: telepathy 3s ease-out forwards;
-        `;
-        
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes telepathy {
-                0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-                50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
-                100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
-            }
-        `;
-        document.head.appendChild(style);
-        
-        container.appendChild(telepathy);
-        setTimeout(() => telepathy.remove(), 4000);
-    }
-    
-    function createNatureSpirits() {
-        const container = document.body;
-        for (let i = 0; i < 8; i++) {
-            const spirit = document.createElement('div');
-            spirit.style.cssText = `
-                position: fixed;
-                left: ${Math.random() * window.innerWidth}px;
-                top: ${Math.random() * window.innerHeight}px;
-                width: 25px;
-                height: 25px;
-                background: radial-gradient(circle, #90EE90, #32CD32);
-                border-radius: 50%;
-                z-index: 1000;
-                animation: natureSpirit 4s ease-out forwards;
-            `;
-            
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes natureSpirit {
-                    0% { transform: scale(0) rotate(0deg); opacity: 0; }
-                    50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
-                    100% { transform: scale(1) rotate(360deg); opacity: 0.6; }
-                }
-            `;
-            document.head.appendChild(style);
-            
-            container.appendChild(spirit);
-            setTimeout(() => spirit.remove(), 5000);
-        }
-    }
-    
-    function createRealityBreak() {
-        const container = document.body;
-        const reality = document.createElement('div');
-        reality.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: repeating-linear-gradient(
-                45deg,
-                #FF0000,
-                #FF0000 10px,
-                #000000 10px,
-                #000000 20px
-            );
-            z-index: 1000;
-            animation: realityBreak 3s ease-out forwards;
-        `;
-        
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes realityBreak {
-                0% { opacity: 0; }
-                50% { opacity: 0.6; }
-                100% { opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
-        
-        container.appendChild(reality);
-        setTimeout(() => reality.remove(), 4000);
-    }
-    
-    function createMindControl() {
-        const container = document.body;
-        const mind = document.createElement('div');
-        mind.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 150px;
-            height: 150px;
-            background: radial-gradient(circle, #FF1493, #8B008B);
-            border-radius: 50%;
-            z-index: 1000;
-            animation: mindControl 3s ease-out forwards;
-        `;
-        
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes mindControl {
-                0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-                50% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.9; }
-                100% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
-            }
-        `;
-        document.head.appendChild(style);
-        
-        container.appendChild(mind);
-        setTimeout(() => mind.remove(), 4000);
-    }
-    
-    function createIllusion() {
-        const container = document.body;
-        const illusion = document.createElement('div');
-        illusion.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 300px;
-            height: 300px;
-            background: linear-gradient(45deg, #FF00FF, #00FFFF, #FFFF00);
-            border-radius: 20px;
-            z-index: 1000;
-            animation: illusion 4s ease-out forwards;
-        `;
-        
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes illusion {
-                0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; }
-                50% { transform: translate(-50%, -50%) scale(1.1) rotate(180deg); opacity: 0.8; }
-                100% { transform: translate(-50%, -50%) scale(1) rotate(360deg); opacity: 0.5; }
-            }
-        `;
-        document.head.appendChild(style);
-        
-        container.appendChild(illusion);
-        setTimeout(() => illusion.remove(), 5000);
-    }
-    
-    function createOmnipotence() {
-        const container = document.body;
-        const omnipotence = document.createElement('div');
-        omnipotence.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, #FFD700, #FFA500, #FF8C00);
-            z-index: 1000;
-            animation: omnipotence 5s ease-out forwards;
-        `;
-        
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes omnipotence {
-                0% { opacity: 0; }
-                50% { opacity: 0.7; }
-                100% { opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
-        
-        container.appendChild(omnipotence);
-        setTimeout(() => omnipotence.remove(), 6000);
-    }
 });

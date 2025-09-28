@@ -139,44 +139,12 @@
     </div>
 
     <script>
-        // Симуляция P2P подключения
+        // Режим ручного сигналинга: эта страница только информирует пользователя
         function connectToRoom() {
-            const roomId = document.getElementById('roomIdInput').value;
-            if (!roomId) {
-                alert('Введите ID комнаты!');
-                return;
-            }
-
             const status = document.getElementById('connectionStatus');
-            status.innerHTML = 'Статус: Подключение к комнате...';
+            status.innerHTML = 'Статус: Откройте основную игру и используйте оффер/ответ.';
             status.style.background = 'rgba(255, 255, 0, 0.2)';
             status.style.borderColor = '#FFFF00';
-
-            // Симулируем подключение
-            setTimeout(() => {
-                status.innerHTML = 'Статус: ✅ Подключено! Магия синхронизируется...';
-                status.style.background = 'rgba(0, 255, 0, 0.2)';
-                status.style.borderColor = '#00FF00';
-                
-                // Запускаем симуляцию получения магии
-                simulateMagicReception();
-            }, 2000);
-        }
-
-        // Симуляция получения магии с компьютера
-        function simulateMagicReception() {
-            const magicEffects = [
-                'Огненный шторм', 'Водоворот', 'Землетрясение', 
-                'Ветряной торнадо', 'Ледяной век', 'Грозовая буря',
-                'Черная дыра', 'Сверхновая', 'Временная петля'
-            ];
-
-            setInterval(() => {
-                if (Math.random() < 0.3) { // 30% шанс получения магии
-                    const effect = magicEffects[Math.floor(Math.random() * magicEffects.length)];
-                    showMagicNotification(effect);
-                }
-            }, 5000);
         }
 
         // Показ уведомления о получении магии
@@ -251,13 +219,7 @@
             }, 4000);
         }
 
-        // Автоматическое обновление ID комнаты (симуляция)
-        setInterval(() => {
-            const roomIdElement = document.getElementById('roomId');
-            if (roomIdElement.textContent.includes('Создание')) {
-                roomIdElement.textContent = 'ID комнаты: magic_room_' + Math.random().toString(36).substr(2, 6);
-            }
-        }, 3000);
+        // Убрана симуляция автообновления ID комнаты
     </script>
 </body>
 </html>
