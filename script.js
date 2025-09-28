@@ -502,7 +502,18 @@ document.addEventListener('DOMContentLoaded', function() {
             ],
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' }
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' },
+                {
+                    urls: 'turn:openrelay.metered.ca:80',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
+                },
+                {
+                    urls: 'turn:openrelay.metered.ca:443',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
+                }
             ],
             peerConnection: null,
             dataChannel: null
@@ -529,7 +540,17 @@ document.addEventListener('DOMContentLoaded', function() {
         iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:stun1.l.google.com:19302' },
-            { urls: 'stun:stun2.l.google.com:19302' }
+            { urls: 'stun:stun2.l.google.com:19302' },
+            {
+                urls: 'turn:openrelay.metered.ca:80',
+                username: 'openrelayproject',
+                credential: 'openrelayproject'
+            },
+            {
+                urls: 'turn:openrelay.metered.ca:443',
+                username: 'openrelayproject',
+                credential: 'openrelayproject'
+            }
         ],
         peerConnections: new Map(),
         dataChannels: new Map(),
@@ -792,7 +813,6 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => foam.remove(), 4000);
         }
     }
-    
     function createAnimalSummon() {
         const container = document.body;
         const animal = document.createElement('div');
@@ -1554,7 +1574,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Показываем подсказки
         showMagicTips();
     }
-    
     // Показ подсказок по управлению
     function showMagicTips() {
         const tipsDiv = document.createElement('div');
@@ -2330,7 +2349,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 8000);
     }
-    
     // Великая стихия
     function createGreatElement() {
         const greatElementContainer = document.createElement('div');
@@ -3129,7 +3147,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 3000);
     }
-    
     // Обращение времени
     function createTimeReversal() {
         const timeReverseContainer = document.createElement('div');
@@ -3802,7 +3819,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Добавление виртуальных игроков для демонстрации
-    // РЕАЛЬНАЯ P2P СИСТЕМА ДЛЯ ЗНАКОМСТВА
+    // РЕАЛЬНАЯ P2P СИСТЕМА ДЛЯ ЗНАКОМСТВ
     
     // Инициализация реальной P2P сети
     function initializeRealP2PNetwork() {
@@ -3865,6 +3882,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <textarea id="remoteAnswer" placeholder="Вставьте ответ другого устройства" style="width:100%; min-height:80px; border-radius:8px; border:1px solid #FFD700; background:rgba(0,0,0,0.4); color:#ff0; padding:8px;"></textarea>
                 <button id="btnAcceptAnswer" style="padding:8px 10px; border-radius:8px; border:1px solid #FFD700; background:rgba(255,215,0,0.1); color:#FFD700; font-weight:bold; cursor:pointer;">Принять ответ (завершить)</button>
+                <div style="height:1px; background:rgba(0,255,255,0.2); margin:6px 0;"></div>
+                <div style="font-weight:bold; color:#00FFFF;">ICE серверы (JSON):</div>
+                <textarea id="iceServersInput" placeholder='Например: [{"urls":"stun:stun.l.google.com:19302"}]' style="width:100%; min-height:60px; border-radius:8px; border:1px solid #00FFFF; background:rgba(0,0,0,0.4); color:#0ff; padding:8px;"></textarea>
+                <button id="btnApplyIce" style="padding:8px 10px; border-radius:8px; border:1px solid #00FFFF; background:rgba(0,255,255,0.1); color:#00FFFF; font-weight:bold; cursor:pointer;">Применить ICE</button>
             </div>
         `;
         
@@ -3877,6 +3898,7 @@ document.addEventListener('DOMContentLoaded', function() {
         byId('btnAcceptOffer').onclick = () => handleRemoteOffer();
         byId('btnCopyAnswer').onclick = () => copyFrom('localAnswer');
         byId('btnAcceptAnswer').onclick = () => handleRemoteAnswer();
+        byId('btnApplyIce').onclick = () => applyIceServersFromUI();
     }
     
     // Инициализация WebRTC
@@ -3893,13 +3915,24 @@ document.addEventListener('DOMContentLoaded', function() {
         // Подготовка к ручному сигналингу
         createDefaultRoom();
     }
-
     // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ РУЧНОГО СИГНАЛИНГА WebRTC
     const manualPeerKey = 'manual_peer';
     let manualGatherTarget = null; // 'offer' | 'answer'
 
     function createPeerConnection() {
         const pc = new RTCPeerConnection({ iceServers: realP2PNetwork.iceServers });
+        pc.onicecandidate = (event) => {
+            if (!event.candidate) {
+                // Сборка ICE завершена, запишем финальное SDP в соответствующее поле
+                if (manualGatherTarget === 'offer') {
+                    const box = document.getElementById('localOffer');
+                    if (box && pc.localDescription) box.value = JSON.stringify(pc.localDescription);
+                } else if (manualGatherTarget === 'answer') {
+                    const box = document.getElementById('localAnswer');
+                    if (box && pc.localDescription) box.value = JSON.stringify(pc.localDescription);
+                }
+            }
+        };
         pc.onconnectionstatechange = () => {
             if (pc.connectionState === 'connected') {
                 updateP2PStatus('Подключен (WebRTC)');
@@ -3929,6 +3962,7 @@ document.addEventListener('DOMContentLoaded', function() {
             setupDataChannel(channel);
             realP2PNetwork.dataChannels.set(manualPeerKey, channel);
             updateConnectedPeersCount();
+            if (typeof updateParticipantsCounts === 'function') updateParticipantsCounts();
         };
         realP2PNetwork.peerConnections.set(manualPeerKey, pc);
         return pc;
@@ -3938,10 +3972,14 @@ document.addEventListener('DOMContentLoaded', function() {
         channel.onopen = () => {
             updateP2PStatus('Канал данных открыт');
             updateConnectedPeersCount();
+            if (typeof updateParticipantsCounts === 'function') updateParticipantsCounts();
         };
         channel.onclose = () => {
             updateP2PStatus('Канал данных закрыт');
             updateConnectedPeersCount();
+            // Удаляем канал из мапы и обновляем счетчики
+            try { realP2PNetwork.dataChannels.delete(manualPeerKey); } catch (_) {}
+            if (typeof updateParticipantsCounts === 'function') updateParticipantsCounts();
         };
         channel.onmessage = (event) => {
             try {
@@ -4043,6 +4081,22 @@ document.addEventListener('DOMContentLoaded', function() {
             updateP2PStatus('Ошибка применения ответа');
             console.error(err);
         });
+    }
+
+    function applyIceServersFromUI() {
+        const box = document.getElementById('iceServersInput');
+        if (!box) return;
+        try {
+            const parsed = JSON.parse(box.value.trim());
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                realP2PNetwork.iceServers = parsed;
+                updateP2PStatus('ICE сервера обновлены');
+            } else {
+                updateP2PStatus('Неверный формат ICE');
+            }
+        } catch (e) {
+            updateP2PStatus('Ошибка разбора ICE');
+        }
     }
 
     function copyFrom(textareaId) {
@@ -4228,7 +4282,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const statusElement = document.getElementById('p2pConnectionStatus');
         if (statusElement) {
             statusElement.textContent = status;
-            statusElement.style.color = status.includes('подключен') || status.includes('активен') ? '#00FF00' : '#FF0000';
+            const s = String(status).toLowerCase();
+            const isGood = s.includes('подключен') || s.includes('активен') || s.includes('open') || s.includes('открыт');
+            statusElement.style.color = isGood ? '#00FF00' : '#FF0000';
         }
     }
     
@@ -4598,7 +4654,6 @@ document.addEventListener('DOMContentLoaded', function() {
             effectElement.textContent = effect;
         }
     }
-    
     // Показ информации о многопользовательской системе
     function showMultiplayerInfo() {
         const infoDiv = document.createElement('div');
@@ -4801,42 +4856,19 @@ document.addEventListener('DOMContentLoaded', function() {
         
         document.body.appendChild(participantsPanel);
         
-        // Симулируем участников
-        simulateParticipants();
+        // Реальные участники: обновляем счетчики от состояния каналов
+        updateParticipantsCounts();
     }
     
     // Симуляция участников
-    function simulateParticipants() {
-        const participantNames = [
-            'Маг_Алекс', 'Маг_Мария', 'Маг_Дмитрий', 'Маг_Анна', 
-            'Маг_Сергей', 'Маг_Елена', 'Маг_Андрей', 'Маг_Ольга'
-        ];
-        
-        let totalParticipants = 1; // Начинаем с себя
-        let activeParticipants = 1;
-        
-        // Обновляем счетчики
-        setInterval(() => {
-            // Случайно добавляем/убираем участников
-            if (Math.random() < 0.2) {
-                if (Math.random() < 0.5 && totalParticipants < 8) {
-                    totalParticipants++;
-                    activeParticipants++;
-                } else if (totalParticipants > 1) {
-                    if (Math.random() < 0.3) {
-                        activeParticipants = Math.max(1, activeParticipants - 1);
-                    }
-                }
-            }
-            
-            // Обновляем UI
-            const totalElement = document.getElementById('totalParticipants');
-            const activeElement = document.getElementById('activeParticipants');
-            
-            if (totalElement) totalElement.textContent = totalParticipants;
-            if (activeElement) activeElement.textContent = activeParticipants;
-            
-        }, 5000);
+    function updateParticipantsCounts() {
+        const totalElement = document.getElementById('totalParticipants');
+        const activeElement = document.getElementById('activeParticipants');
+        const activeChannels = Array.from(realP2PNetwork.dataChannels.values())
+            .filter(dc => dc && dc.readyState === 'open').length;
+        const total = 1 + activeChannels; // мы + открытые пиры
+        if (totalElement) totalElement.textContent = String(total);
+        if (activeElement) activeElement.textContent = String(Math.max(1, total));
     }
     
     // Триггер универсальной магии
@@ -5377,7 +5409,6 @@ document.addEventListener('DOMContentLoaded', function() {
             document.head.appendChild(style);
         }
     }
-    
     // Пробивание дыры в реальности
     function punchRealityHole() {
         showMagicInfo("💥 ПРОБИВАНИЕ ДЫРЫ В РЕАЛЬНОСТИ! 💥");
@@ -6162,7 +6193,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 3000);
     }
-    
     // Оптимизация существующих элементов для мобильных
     function optimizeForMobile() {
         // Увеличиваем размеры элементов для мобильных
@@ -6278,19 +6308,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Инициализация глобальной трансляции
     function initializeGlobalMagicBroadcast() {
-        console.log('🌍 Глобальная трансляция магии активирована!');
-        
-        // Создаем UI для глобальной трансляции
-        createGlobalBroadcastUI();
-        
-        // Инициализируем потоковую передачу
-        initializeMagicStreaming();
-        
-        // Добавляем виртуальных зрителей со всего мира
-        addGlobalViewers();
-        
-        // Показываем информацию о глобальной трансляции
-        showGlobalBroadcastInfo();
+        // Отключено: убраны виртуальные зрители и глобальные симуляции
     }
     
     // Создание UI для глобальной трансляции
@@ -6350,120 +6368,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Инициализация потоковой передачи магии
-    function initializeMagicStreaming() {
-        // Симулируем подключение к глобальной сети
-        setTimeout(() => {
-            globalMagicBroadcast.magicStream.active = true;
-            updateGlobalViewerCount();
-            
-            // Запускаем симуляцию зрителей
-            simulateGlobalViewers();
-        }, 2000);
-    }
+    function initializeMagicStreaming() {}
     
     // Добавление виртуальных зрителей со всего мира
-    function addGlobalViewers() {
-        const globalViewers = [
-            { id: 'viewer_001', name: 'Маг_Токио', location: 'Токио, Япония', timezone: 'JST' },
-            { id: 'viewer_002', name: 'Маг_Лондон', location: 'Лондон, Великобритания', timezone: 'GMT' },
-            { id: 'viewer_003', name: 'Маг_НьюЙорк', location: 'Нью-Йорк, США', timezone: 'EST' },
-            { id: 'viewer_004', name: 'Маг_Сидней', location: 'Сидней, Австралия', timezone: 'AEST' },
-            { id: 'viewer_005', name: 'Маг_Москва', location: 'Москва, Россия', timezone: 'MSK' },
-            { id: 'viewer_006', name: 'Маг_Париж', location: 'Париж, Франция', timezone: 'CET' },
-            { id: 'viewer_007', name: 'Маг_Дубай', location: 'Дубай, ОАЭ', timezone: 'GST' },
-            { id: 'viewer_008', name: 'Маг_СанПаулу', location: 'Сан-Паулу, Бразилия', timezone: 'BRT' },
-            { id: 'viewer_009', name: 'Маг_Мумбаи', location: 'Мумбаи, Индия', timezone: 'IST' },
-            { id: 'viewer_010', name: 'Маг_Торонто', location: 'Торонто, Канада', timezone: 'EST' }
-        ];
-        
-        globalViewers.forEach(viewer => {
-            globalMagicBroadcast.magicStream.viewers.set(viewer.id, {
-                ...viewer,
-                joinedAt: Date.now() - Math.random() * 300000, // Присоединились в разное время
-                magicWatched: Math.floor(Math.random() * 100),
-                isWatching: true
-            });
-        });
-        
-        updateGlobalViewerCount();
-    }
+    function addGlobalViewers() {}
     
     // Симуляция глобальных зрителей
-    function simulateGlobalViewers() {
-        setInterval(() => {
-            // Случайно добавляем/убираем зрителей
-            if (Math.random() < 0.3) {
-                const viewers = Array.from(globalMagicBroadcast.magicStream.viewers.values());
-                const randomViewer = viewers[Math.floor(Math.random() * viewers.length)];
-                
-                if (randomViewer) {
-                    randomViewer.isWatching = !randomViewer.isWatching;
-                    if (randomViewer.isWatching) {
-                        globalMagicBroadcast.magicStream.totalViews++;
-                    }
-                }
-            }
-            
-            updateGlobalViewerCount();
-        }, 5000);
-    }
+    function simulateGlobalViewers() {}
     
     // Обновление счетчика зрителей
-    function updateGlobalViewerCount() {
-        const activeViewers = Array.from(globalMagicBroadcast.magicStream.viewers.values())
-            .filter(viewer => viewer.isWatching).length;
-        
-        const viewerCountElement = document.getElementById('globalViewerCount');
-        const viewCountElement = document.getElementById('globalViewCount');
-        
-        if (viewerCountElement) {
-            viewerCountElement.textContent = activeViewers;
-        }
-        
-        if (viewCountElement) {
-            viewCountElement.textContent = globalMagicBroadcast.magicStream.totalViews;
-        }
-    }
+    function updateGlobalViewerCount() {}
     
     // Глобальная трансляция магии
-    function broadcastMagicGlobally(effect) {
-        if (!globalMagicBroadcast.enabled) return;
-        
-        const magicData = {
-            type: 'global_magic_broadcast',
-            playerId: playerId,
-            playerName: playerName,
-            effectName: effect.name,
-            timestamp: Date.now(),
-            level: magicLevel,
-            location: 'Глобальная сеть',
-            broadcastId: 'broadcast_' + Date.now()
-        };
-        
-        // Симулируем глобальную трансляцию
-        setTimeout(() => {
-            // В реальной системе здесь был бы WebSocket.send() на глобальный сервер
-            console.log('🌍 Глобальная трансляция:', magicData);
-            
-            // Добавляем в историю магии
-            globalMagicBroadcast.magicStream.magicHistory.push(magicData);
-            if (globalMagicBroadcast.magicStream.magicHistory.length > 100) {
-                globalMagicBroadcast.magicStream.magicHistory.shift();
-            }
-            
-            // Увеличиваем счетчик просмотров
-            globalMagicBroadcast.magicStream.totalViews += 
-                Array.from(globalMagicBroadcast.magicStream.viewers.values())
-                    .filter(viewer => viewer.isWatching).length;
-            
-            // Показываем уведомление о глобальной трансляции
-            showGlobalBroadcastNotification(effect);
-            
-            // Обновляем счетчики
-            updateGlobalViewerCount();
-            
-        }, globalMagicBroadcast.realTimeSync.latency);
-    }
+    function broadcastMagicGlobally(effect) {}
     
     // Показ уведомления о глобальной трансляции
     function showGlobalBroadcastNotification(effect) {
@@ -6619,19 +6536,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Инициализация P2P сети
     function initializeP2PMagicNetwork() {
-        console.log('🔗 P2P система связи устройств инициализируется...');
-        
-        // Создаем UI для P2P системы
-        createP2PNetworkUI();
-        
-        // Инициализируем Socket Supply
-        initializeSocketSupply();
-        
-        // Инициализируем UDP punch-hole
-        initializeUDPPunchHole();
-        
-        // Показываем информацию о P2P соединении
-        showP2PConnectionInfo();
+        // Отключено: отдельная P2P сеть устройств не используется
     }
     
     // Создание UI для P2P сети
@@ -6707,6 +6612,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Симуляция подключения устройств
     function simulateDeviceConnections() {
+        return; // отключено
         const deviceTypes = ['Компьютер', 'Телефон', 'Планшет'];
         const deviceNames = ['Главный_ПК', 'Мобильный_Маг', 'Планшет_Магии'];
         
@@ -6742,22 +6648,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Трансляция магии на подключенные устройства
     function broadcastMagicToDevices(magicData) {
-        if (p2pMagicNetwork.connectedDevices.size === 0) return;
-        
-        // Симулируем отправку через P2P соединение
-        p2pMagicNetwork.connectedDevices.forEach((device, deviceId) => {
-            if (device.isActive) {
-                // В реальной системе здесь был бы WebRTC data channel
-                console.log(`📱 Трансляция магии на ${device.name} (${device.type}):`, magicData);
-                
-                // Симулируем получение магии на другом устройстве
-                simulateMagicOnDevice(device, magicData);
-            }
-        });
+        // отключено
     }
     
     // Симуляция получения магии на другом устройстве
     function simulateMagicOnDevice(device, magicData) {
+        return; // отключено
         // Создаем уведомление о получении магии
         const notification = document.createElement('div');
         notification.style.cssText = `
@@ -7056,7 +6952,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Fallback
         return allEffects[Math.floor(Math.random() * allEffects.length)];
     }
-    
     // Новые функции для поддержки системы магии
     
     // Создание эффекта повышения уровня
@@ -7856,7 +7751,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 8000);
     }
-    
     // Создание магического взрыва
     function createMagicExplosion() {
         for (let i = 0; i < 30; i++) {
@@ -8635,7 +8529,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 8000);
         }
     }
-    
     // Разрыв измерений
     function createDimensionRift() {
         const rift = document.createElement('div');
@@ -9412,7 +9305,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 10000);
     }
-    
     // Магический апокалипсис
     function createMagicApocalypse() {
         // Создаем апокалиптические эффекты
@@ -10211,7 +10103,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 6000);
     }
-    
     // Космические ужасы
     function summonCosmicHorrors() {
         const horrors = ['👁️', '🦑', '🐙', '🕷️', '🦂', '🦇', '👹', '👺', '💀', '👻'];
@@ -10567,13 +10458,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 #0000ff, #4000ff, #8000ff, #c000ff, #ff00ff, #ff00c0, #ff0080, #ff0040,
                 #ff0000, #ff2000, #ff6000, #ffa000, #ffe000, #e0ff00, #a0ff00, #60ff00,
                 #20ff00, #00ff20, #00ff60, #00ffa0, #00ffe0, #00e0ff, #00a0ff, #0060ff,
-                #0020ff, #2000ff, #6000ff, #a000ff, #e000ff, #ff00e0, #ff00a0, #ff0060,
+                #0020ff, #1000ff, #5000ff, #9000ff, #d000ff, #ff00e0, #ff00a0, #ff0060,
                 #ff0020, #ff1000, #ff5000, #ff9000, #ffd000, #d0ff00, #90ff00, #50ff00,
                 #10ff00, #00ff10, #00ff50, #00ff90, #00ffd0, #00d0ff, #0090ff, #0050ff,
-                #0010ff, #1000ff, #5000ff, #9000ff, #d000ff, #ff00d0, #ff0090, #ff0050,
-                #ff0010, #ff0800, #ff4800, #ff8800, #ffc800, #c8ff00, #88ff00, #48ff00,
-                #08ff00, #00ff08, #00ff48, #00ff88, #00ffc8, #00c8ff, #0088ff, #0048ff,
-                #0008ff, #0800ff, #4800ff, #8800ff, #c800ff, #ff00c8, #ff0088, #ff0048,
+                #0010ff, #0800ff, #4800ff, #8800ff, #c800ff, #ff00c8, #ff0088, #ff0048,
                 #ff0008, #ff0000
             );
             animation: absoluteChaosSpin 0.5s linear infinite;
@@ -11013,7 +10901,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 15000);
     }
-    
     // Глитч реальности
     function createRealityGlitch() {
         // Создаем глитч реальности
@@ -11069,698 +10956,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 12000);
     }
-    
-    // Космические сущности
-    function summonCosmicEntities() {
-        const entities = ['🌌', '⭐', '🌟', '💫', '🌠', '☄️', '🛸', '👽', '🌍', '🌙'];
-        
-        for (let i = 0; i < 30; i++) {
-            const entity = document.createElement('div');
-            entity.style.cssText = `
-                position: absolute;
-                font-size: ${50 + Math.random() * 80}px;
-                left: ${Math.random() * 100}%;
-                top: ${Math.random() * 100}%;
-                pointer-events: none;
-                animation: cosmicEntitySummon ${6 + Math.random() * 6}s ease-in-out infinite;
-                z-index: 1500;
-                text-shadow: 0 0 60px #ffffff;
-                filter: hue-rotate(${Math.random() * 360}deg);
-            `;
-            entity.textContent = entities[Math.floor(Math.random() * entities.length)];
-            world.appendChild(entity);
-            
-            setTimeout(() => {
-                if (entity.parentNode) {
-                    entity.parentNode.removeChild(entity);
-                }
-            }, 18000);
-        }
-    }
-    
-    // Магическая сингулярность
-    function createMagicSingularity() {
-        const singularity = document.createElement('div');
-        singularity.style.cssText = `
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 0px;
-            height: 0px;
-            background: radial-gradient(circle, 
-                #ffffff 0%, 
-                #ff6b6b 20%, 
-                #4ecdc4 40%, 
-                #45b7d1 60%, 
-                #f9ca24 80%, 
-                #000000 100%);
-            border-radius: 50%;
-            animation: magicSingularityCollapse 6s ease-in forwards;
-            z-index: 4000;
-            pointer-events: none;
-        `;
-        world.appendChild(singularity);
-        
-        // Создаем искажения пространства-времени
-        for (let i = 0; i < 30; i++) {
-            const distortion = document.createElement('div');
-            distortion.style.cssText = `
-                position: absolute;
-                width: ${60 + i * 30}px;
-                height: ${60 + i * 30}px;
-                border: 3px solid rgba(255,255,255,0.4);
-                border-radius: 50%;
-                left: 50%;
-                top: 50%;
-                transform: translate(-50%, -50%);
-                pointer-events: none;
-                animation: spaceTimeDistortion ${3 + i * 0.2}s linear infinite;
-                z-index: ${3500 - i * 100};
-            `;
-            world.appendChild(distortion);
-            
-            setTimeout(() => {
-                if (distortion.parentNode) {
-                    distortion.parentNode.removeChild(distortion);
-                }
-            }, 8000);
-        }
-        
-        setTimeout(() => {
-            if (singularity.parentNode) {
-                singularity.parentNode.removeChild(singularity);
-            }
-        }, 6000);
-    }
-    
-    // Коллапс вселенной
-    function spawnUniverseCollapse() {
-        // Создаем коллапс вселенной
-        const collapse = document.createElement('div');
-        collapse.style.cssText = `
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100vw;
-            height: 100vh;
-            background: radial-gradient(circle, 
-                rgba(0,0,0,0.9) 0%, 
-                rgba(50,0,0,0.8) 50%, 
-                rgba(0,0,0,1) 100%);
-            animation: universeCollapse 8s ease-in forwards;
-            z-index: 4500;
-            pointer-events: none;
-        `;
-        world.appendChild(collapse);
-        
-        // Создаем коллапсирующие элементы
-        for (let i = 0; i = 100; i++) {
-            const element = document.createElement('div');
-            element.style.cssText = `
-                position: absolute;
-                width: ${20 + Math.random() * 80}px;
-                height: ${20 + Math.random() * 80}px;
-                background: ${['#ff0000', '#ff6b6b', '#ffa500', '#ffff00', '#ffffff'][Math.floor(Math.random() * 5)]};
-                left: ${Math.random() * 100}%;
-                top: ${Math.random() * 100}%;
-                pointer-events: none;
-                animation: universeCollapseElement ${5 + Math.random() * 3}s ease-in forwards;
-                z-index: 4000;
-            `;
-            world.appendChild(element);
-            
-            setTimeout(() => {
-                if (element.parentNode) {
-                    element.parentNode.removeChild(element);
-                }
-            }, 8000);
-        }
-        
-        setTimeout(() => {
-            if (collapse.parentNode) {
-                collapse.parentNode.removeChild(collapse);
-            }
-        }, 8000);
-    }
-    
-    // Временной парадокс
-    function createTimeParadox() {
-        // Создаем временные парадоксы
-        for (let i = 0; i < 15; i++) {
-            const paradox = document.createElement('div');
-            paradox.style.cssText = `
-                position: absolute;
-                width: ${80 + i * 40}px;
-                height: ${80 + i * 40}px;
-                border: 4px solid rgba(255,255,0,0.9);
-                border-radius: 50%;
-                left: 50%;
-                top: 50%;
-                transform: translate(-50%, -50%);
-                pointer-events: none;
-                animation: timeParadoxLoop ${2 + i * 0.3}s linear infinite;
-                z-index: 2000;
-            `;
-            world.appendChild(paradox);
-            
-            setTimeout(() => {
-                if (paradox.parentNode) {
-                    paradox.parentNode.removeChild(paradox);
-                }
-            }, 10000);
-        }
-        
-        // Создаем временные искажения
-        const timeDistortions = document.createElement('div');
-        timeDistortions.style.cssText = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: conic-gradient(
-                rgba(255,0,255,0.2) 0deg,
-                rgba(0,255,255,0.2) 72deg,
-                rgba(255,255,0,0.2) 144deg,
-                rgba(255,0,0,0.2) 216deg,
-                rgba(0,255,0,0.2) 288deg,
-                rgba(0,0,255,0.2) 360deg
-            );
-            animation: timeParadoxDistort 5s ease-in-out infinite;
-            z-index: 1500;
-            pointer-events: none;
-        `;
-        world.appendChild(timeDistortions);
-        
-        setTimeout(() => {
-            if (timeDistortions.parentNode) {
-                timeDistortions.parentNode.removeChild(timeDistortions);
-            }
-        }, 12000);
-    }
-    
-    // Первобытные силы
-    function summonPrimordialForces() {
-        const forces = ['🌊', '🔥', '🌪️', '⚡', '🌍', '☀️', '🌙', '⭐', '🌟', '💫'];
-        
-        for (let i = 0; i < 10; i++) {
-            const force = document.createElement('div');
-            force.style.cssText = `
-                position: absolute;
-                font-size: ${120 + Math.random() * 80}px;
-                left: ${5 + i * 10}%;
-                top: 25%;
-                pointer-events: none;
-                animation: primordialForceSummon ${8 + i * 0.8}s ease-in-out infinite;
-                z-index: 2000;
-                text-shadow: 0 0 80px #ffffff;
-                filter: hue-rotate(${Math.random() * 360}deg);
-            `;
-            force.textContent = forces[i];
-            world.appendChild(force);
-            
-            setTimeout(() => {
-                if (force.parentNode) {
-                    force.parentNode.removeChild(force);
-                }
-            }, 15000);
-        }
-    }
-    
-    // Магический Большой взрыв
-    function createMagicBigBang() {
-        // Создаем Большой взрыв
-        const bigBang = document.createElement('div');
-        bigBang.style.cssText = `
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 0px;
-            height: 0px;
-            background: radial-gradient(circle, 
-                #ffffff 0%, 
-                #ffff00 15%, 
-                #ff6b6b 30%, 
-                #4ecdc4 45%, 
-                #45b7d1 60%, 
-                #f9ca24 75%, 
-                #ff9ff3 90%, 
-                #000000 100%);
-            border-radius: 50%;
-            animation: magicBigBang 7s ease-out forwards;
-            z-index: 3000;
-            pointer-events: none;
-        `;
-        world.appendChild(bigBang);
-        
-        // Создаем частицы взрыва
-        for (let i = 0; i < 150; i++) {
-            const particle = document.createElement('div');
-            particle.style.cssText = `
-                position: absolute;
-                width: 5px;
-                height: 5px;
-                background: ${['#ffffff', '#ffff00', '#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#ff9ff3'][Math.floor(Math.random() * 7)]};
-                border-radius: 50%;
-                left: 50%;
-                top: 50%;
-                pointer-events: none;
-                animation: bigBangParticleExplosion ${4 + Math.random() * 3}s ease-out forwards;
-                z-index: 2500;
-            `;
-            world.appendChild(particle);
-            
-            setTimeout(() => {
-                if (particle.parentNode) {
-                    particle.parentNode.removeChild(particle);
-                }
-            }, 7000);
-        }
-        
-        setTimeout(() => {
-            if (bigBang.parentNode) {
-                bigBang.parentNode.removeChild(bigBang);
-            }
-        }, 7000);
-    }
-    
-    // Искажение реальности
-    function spawnRealityWarp() {
-        // Создаем искажения реальности
-        const realityWarp = document.createElement('div');
-        realityWarp.style.cssText = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: repeating-conic-gradient(
-                from 0deg at 50% 50%,
-                rgba(255,0,255,0.2) 0deg,
-                rgba(0,255,255,0.2) 45deg,
-                rgba(255,255,0,0.2) 90deg,
-                rgba(255,0,0,0.2) 135deg,
-                rgba(0,255,0,0.2) 180deg,
-                rgba(0,0,255,0.2) 225deg,
-                rgba(255,0,255,0.2) 270deg,
-                rgba(0,255,255,0.2) 315deg,
-                rgba(255,0,255,0.2) 360deg
-            );
-            animation: realityWarpDistort 4s ease-in-out infinite;
-            z-index: 2000;
-            pointer-events: none;
-        `;
-        world.appendChild(realityWarp);
-        
-        // Создаем плавающие искажения
-        for (let i = 0; i < 40; i++) {
-            const warp = document.createElement('div');
-            warp.style.cssText = `
-                position: absolute;
-                width: ${40 + Math.random() * 80}px;
-                height: ${40 + Math.random() * 80}px;
-                background: radial-gradient(circle, 
-                    rgba(255,255,255,0.3) 0%, 
-                    transparent 100%);
-                border-radius: 50%;
-                left: ${Math.random() * 100}%;
-                top: ${Math.random() * 100}%;
-                pointer-events: none;
-                animation: realityWarpFloat ${4 + Math.random() * 4}s ease-in-out infinite;
-                z-index: 1500;
-            `;
-            world.appendChild(warp);
-            
-            setTimeout(() => {
-                if (warp.parentNode) {
-                    warp.parentNode.removeChild(warp);
-                }
-            }, 12000);
-        }
-        
-        setTimeout(() => {
-            if (realityWarp.parentNode) {
-                realityWarp.parentNode.removeChild(realityWarp);
-            }
-        }, 12000);
-    }
-    
-    // Магическая пустота
-    function createMagicVoid() {
-        // Создаем магическую пустоту
-        const magicVoid = document.createElement('div');
-        magicVoid.style.cssText = `
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 0px;
-            height: 0px;
-            background: radial-gradient(circle, 
-                transparent 0%, 
-                rgba(0,0,0,0.6) 40%, 
-                rgba(0,0,0,0.9) 80%, 
-                #000000 100%);
-            border-radius: 50%;
-            animation: magicVoidExpansion 10s ease-out forwards;
-            z-index: 4000;
-            pointer-events: none;
-        `;
-        world.appendChild(magicVoid);
-        
-        // Создаем всасываемые элементы
-        for (let i = 0; i < 300; i++) {
-            const suckedElement = document.createElement('div');
-            suckedElement.style.cssText = `
-                position: absolute;
-                width: ${3 + Math.random() * 12}px;
-                height: ${3 + Math.random() * 12}px;
-                background: ${['#ffffff', '#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#ff9ff3'][Math.floor(Math.random() * 6)]};
-                border-radius: 50%;
-                left: ${Math.random() * 100}%;
-                top: ${Math.random() * 100}%;
-                pointer-events: none;
-                animation: voidElementSuck ${4 + Math.random() * 4}s ease-in forwards;
-                z-index: 3000;
-            `;
-            world.appendChild(suckedElement);
-            
-            setTimeout(() => {
-                if (suckedElement.parentNode) {
-                    suckedElement.parentNode.removeChild(suckedElement);
-                }
-            }, 8000);
-        }
-        
-        setTimeout(() => {
-            if (magicVoid.parentNode) {
-                magicVoid.parentNode.removeChild(magicVoid);
-            }
-        }, 10000);
-    }
-    
-    // Древние ужасы
-    function summonEldritchHorrors() {
-        const horrors = ['👁️', '🦑', '🐙', '🕷️', '🦂', '🦇', '👹', '👺', '💀', '👻'];
-        
-        for (let i = 0; i < 20; i++) {
-            const horror = document.createElement('div');
-            horror.style.cssText = `
-                position: absolute;
-                font-size: ${100 + Math.random() * 100}px;
-                left: ${Math.random() * 100}%;
-                top: ${Math.random() * 100}%;
-                pointer-events: none;
-                animation: eldritchHorrorFloat ${6 + Math.random() * 6}s ease-in-out infinite;
-                z-index: 1500;
-                filter: hue-rotate(${Math.random() * 360}deg) brightness(${0.3 + Math.random() * 1.7});
-                text-shadow: 0 0 60px #ff0000;
-            `;
-            horror.textContent = horrors[Math.floor(Math.random() * horrors.length)];
-            world.appendChild(horror);
-            
-            setTimeout(() => {
-                if (horror.parentNode) {
-                    horror.parentNode.removeChild(horror);
-                }
-            }, 15000);
-        }
-    }
-    
-    // Шторм измерений
-    function createDimensionStorm() {
-        // Создаем шторм из измерений
-        for (let i = 0; i < 80; i++) {
-            const dimension = document.createElement('div');
-            dimension.style.cssText = `
-                position: absolute;
-                width: ${40 + Math.random() * 100}px;
-                height: ${40 + Math.random() * 100}px;
-                border: 4px solid rgba(255,255,255,0.6);
-                border-radius: ${Math.random() * 50}%;
-                left: ${Math.random() * 100}%;
-                top: ${Math.random() * 100}%;
-                pointer-events: none;
-                animation: dimensionStormFloat ${3 + Math.random() * 4}s ease-in-out infinite;
-                z-index: 1500;
-                background: radial-gradient(circle, 
-                    rgba(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255},0.4) 0%, 
-                    transparent 100%);
-            `;
-            world.appendChild(dimension);
-            
-            setTimeout(() => {
-                if (dimension.parentNode) {
-                    dimension.parentNode.removeChild(dimension);
-                }
-            }, 12000);
-        }
-    }
-    
-    // Магический апокалипсис
-    function spawnMagicApocalypse() {
-        // Создаем магический апокалипсис
-        const apocalypse = document.createElement('div');
-        apocalypse.style.cssText = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at center, 
-                rgba(255,0,0,0.4) 0%, 
-                rgba(255,100,0,0.3) 50%, 
-                rgba(0,0,0,0.6) 100%);
-            animation: magicApocalypseGlow 4s ease-in-out infinite;
-            z-index: 2000;
-            pointer-events: none;
-        `;
-        world.appendChild(apocalypse);
-        
-        // Создаем апокалиптические эффекты
-        const apocalypseEffects = [
-            () => createMeteorShower(),
-            () => createLightning(),
-            () => createTornado(),
-            () => createFireworks(),
-            () => spawnMagicCrystals()
-        ];
-        
-        // Запускаем все эффекты одновременно
-        apocalypseEffects.forEach((effect, index) => {
-            setTimeout(() => effect(), index * 800);
-        });
-        
-        setTimeout(() => {
-            if (apocalypse.parentNode) {
-                apocalypse.parentNode.removeChild(apocalypse);
-            }
-        }, 20000);
-    }
-    
-    // Ультимативный хаос
-    function createUltimateChaos() {
-        // Создаем ультимативный хаос - ВСЕ эффекты одновременно!
-        const allEffects = [
-            createChaosRealm, spawnUniverse, createTimeParadox, summonGods,
-            createMultiverse, spawnRealityBreaker, createMagicApocalypse,
-            summonEldritchHorrors, createDimensionCollapse, spawnCosmicEntities,
-            createMagicBigBang, summonInfiniteDragons, createRealityGlitch,
-            spawnMagicBlackHole, createUniverseEnd, summonPrimordialForces,
-            createMagicSingularity, spawnRealityWarp, createRealityOverload,
-            spawnInfiniteUniverses, summonElderGods, createDimensionStorm,
-            spawnRealityGlitch, createMagicBigCrunch, summonCosmicHorrors,
-            createTimeCollapse, spawnInfiniteMagic, createRealityFracture,
-            summonPrimordialChaos, createMagicVoid, spawnUniverseReality,
-            createMagicInfinity, summonAbsoluteChaos, createRealityEnd,
-            spawnMagicEverything, createUltimateReality, createOmnipotentMagic,
-            spawnRealityDestruction, createInfiniteChaos, createDimensionBreak,
-            spawnMagicOverload, createRealityGlitch, summonCosmicEntities,
-            createMagicSingularity, spawnUniverseCollapse, createTimeParadox,
-            summonPrimordialForces, createMagicBigBang, spawnRealityWarp,
-            createMagicVoid, summonEldritchHorrors, createDimensionStorm,
-            spawnMagicApocalypse
-        ];
-        
-        // Запускаем ВСЕ эффекты одновременно!
-        allEffects.forEach((effect, index) => {
-            setTimeout(() => {
-                effect();
-            }, index * 2);
-        });
-        
-        // Создаем ультимативный хаос портал
-        const ultimateChaos = document.createElement('div');
-        ultimateChaos.style.cssText = `
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 700px;
-            height: 700px;
-            border-radius: 50%;
-            background: conic-gradient(
-                #ff0000, #ff1000, #ff2000, #ff3000, #ff4000, #ff5000, #ff6000, #ff7000,
-                #ff8000, #ff9000, #ffa000, #ffb000, #ffc000, #ffd000, #ffe000, #fff000,
-                #ffff00, #f0ff00, #e0ff00, #d0ff00, #c0ff00, #b0ff00, #a0ff00, #90ff00,
-                #80ff00, #70ff00, #60ff00, #50ff00, #40ff00, #30ff00, #20ff00, #10ff00,
-                #00ff00, #00ff10, #00ff20, #00ff30, #00ff40, #00ff50, #00ff60, #00ff70,
-                #00ff80, #00ff90, #00ffa0, #00ffb0, #00ffc0, #00ffd0, #00ffe0, #00fff0,
-                #00ffff, #00f0ff, #00e0ff, #00d0ff, #00c0ff, #00b0ff, #00a0ff, #0090ff,
-                #0080ff, #0070ff, #0060ff, #0050ff, #0040ff, #0030ff, #0020ff, #0010ff,
-                #0000ff, #1000ff, #2000ff, #3000ff, #4000ff, #5000ff, #6000ff, #7000ff,
-                #8000ff, #9000ff, #a000ff, #b000ff, #c000ff, #d000ff, #e000ff, #f000ff,
-                #ff00ff, #ff00f0, #ff00e0, #ff00d0, #ff00c0, #ff00b0, #ff00a0, #ff0090,
-                #ff0080, #ff0070, #ff0060, #ff0050, #ff0040, #ff0030, #ff0020, #ff0010,
-                #ff0000
-            );
-            animation: ultimateChaosSpin 0.1s linear infinite;
-            z-index: 9000;
-            pointer-events: none;
-        `;
-        world.appendChild(ultimateChaos);
-        
-        setTimeout(() => {
-            if (ultimateChaos.parentNode) {
-                ultimateChaos.parentNode.removeChild(ultimateChaos);
-            }
-        }, 60000);
-    }
-    
-    // Показ результата магии
-    function showMagicResult() {
-        const results = [
-            '✨ Цвета мира изменились!',
-            '🌈 Появилась радуга!',
-            '💖 Сердечки летают повсюду!',
-            '⚡ Молния осветила небо!',
-            '💰 Сокровище найдено!',
-            '☄️ Метеоритный дождь!',
-            '🦋 Магические бабочки!',
-            '🌌 Северное сияние!',
-            '💎 Кристаллы появились!',
-            '🌪️ Торнадо!',
-            '🏝️ Новые острова!',
-            '🌀 Магический портал!',
-            '🐉 Дракон пролетел!',
-            '🎆 Фейерверк!',
-            '🌸 Цветы расцвели!',
-            '🌟 УЛЬТИМАТИВНАЯ МАГИЯ!',
-            '⛈️ Магический шторм!',
-            '🦁 Магические существа!',
-            '🌌 ГАЛАКТИКА СОЗДАНА!',
-            '🌲 Магический лес вырос!',
-            '⏰ Время искажено!',
-            '🔥 Элементали призваны!',
-            '🌊 Магический океан!',
-            '👽 Космические существа!',
-            '🌀 Разрыв измерений!',
-            '🔥 Феникс восстал!',
-            '🏔️ Магическая гора!',
-            '✨ Звездная пыль!',
-            '🏰 Магический город!',
-            '👻 Древние духи!',
-            '⚔️ Эпическая битва!',
-            '🌺 Магический сад!',
-            '🌀 Реальность искажена!',
-            '🐲 МЕГА-ЗВЕРЬ!',
-            '♾️ БЕСКОНЕЧНАЯ МАГИЯ!',
-            '💥 ХАОТИЧЕСКОЕ ЦАРСТВО!',
-            '🌌 ВСЕЛЕННАЯ СОЗДАНА!',
-            '⏰ ВРЕМЕННОЙ ПАРАДОКС!',
-            '⚡ БОГИ ПРИЗВАНЫ!',
-            '🌌 МУЛЬТИВСЕЛЕННАЯ!',
-            '💥 РЕАЛЬНОСТЬ СЛОМАНА!',
-            '🔥 МАГИЧЕСКИЙ АПОКАЛИПСИС!',
-            '👁️ ДРЕВНИЕ УЖАСЫ!',
-            '🌀 КОЛЛАПС ИЗМЕРЕНИЙ!',
-            '🌌 КОСМИЧЕСКИЕ СУЩНОСТИ!',
-            '💥 БОЛЬШОЙ ВЗРЫВ!',
-            '🐉 БЕСКОНЕЧНЫЕ ДРАКОНЫ!',
-            '💥 ГЛИТЧ РЕАЛЬНОСТИ!',
-            '🕳️ ЧЕРНАЯ ДЫРА!',
-            '💀 КОНЕЦ ВСЕЛЕННОЙ!',
-            '⚡ ПЕРВОБЫТНЫЕ СИЛЫ!',
-            '🌀 МАГИЧЕСКАЯ СИНГУЛЯРНОСТЬ!',
-            '🌀 ИСКАЖЕНИЕ РЕАЛЬНОСТИ!',
-            '💥 УЛЬТИМАТИВНЫЙ ХАОС!',
-            '💥 ПЕРЕГРУЗКА РЕАЛЬНОСТИ!',
-            '🌌 БЕСКОНЕЧНЫЕ ВСЕЛЕННЫЕ!',
-            '⚡ ДРЕВНИЕ БОГИ!',
-            '🌀 ШТОРМ ИЗМЕРЕНИЙ!',
-            '💥 ГЛИТЧ РЕАЛЬНОСТИ!',
-            '💥 БОЛЬШОЙ ХРУСТ!',
-            '👁️ КОСМИЧЕСКИЕ УЖАСЫ!',
-            '⏰ КОЛЛАПС ВРЕМЕНИ!',
-            '♾️ БЕСКОНЕЧНАЯ МАГИЯ!',
-            '💥 РАЗЛОМ РЕАЛЬНОСТИ!',
-            '💥 ПЕРВОБЫТНЫЙ ХАОС!',
-            '🕳️ МАГИЧЕСКАЯ ПУСТОТА!',
-            '🌌 РЕАЛЬНОСТЬ ВСЕЛЕННОЙ!',
-            '♾️ МАГИЧЕСКАЯ БЕСКОНЕЧНОСТЬ!',
-            '💥 АБСОЛЮТНЫЙ ХАОС!',
-            '💀 КОНЕЦ РЕАЛЬНОСТИ!',
-            '♾️ МАГИЧЕСКОЕ ВСЕ!',
-            '🌌 УЛЬТИМАТИВНАЯ РЕАЛЬНОСТЬ!',
-            '♾️ ВСЕМОГУЩАЯ МАГИЯ!',
-            '💥 УНИЧТОЖЕНИЕ РЕАЛЬНОСТИ!',
-            '💥 БЕСКОНЕЧНЫЙ ХАОС!',
-            '⚡ ДРЕВНИЕ БОГИ!',
-            '🌀 РАЗЛОМ ИЗМЕРЕНИЙ!',
-            '💥 ПЕРЕГРУЗКА МАГИИ!',
-            '💥 ГЛИТЧ РЕАЛЬНОСТИ!',
-            '🌌 КОСМИЧЕСКИЕ СУЩНОСТИ!',
-            '🌀 МАГИЧЕСКАЯ СИНГУЛЯРНОСТЬ!',
-            '💥 КОЛЛАПС ВСЕЛЕННОЙ!',
-            '⏰ ВРЕМЕННОЙ ПАРАДОКС!',
-            '⚡ ПЕРВОБЫТНЫЕ СИЛЫ!',
-            '💥 БОЛЬШОЙ ВЗРЫВ!',
-            '🌀 ИСКАЖЕНИЕ РЕАЛЬНОСТИ!',
-            '🕳️ МАГИЧЕСКАЯ ПУСТОТА!',
-            '👁️ ДРЕВНИЕ УЖАСЫ!',
-            '🌀 ШТОРМ ИЗМЕРЕНИЙ!',
-            '🔥 МАГИЧЕСКИЙ АПОКАЛИПСИС!',
-            '💥 УЛЬТИМАТИВНЫЙ ХАОС!'
-        ];
-        
-        const resultText = results[Math.floor(Math.random() * results.length)];
-        
-        const resultBox = document.createElement('div');
-        resultBox.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,240,240,0.95));
-            color: #333;
-            padding: 20px 40px;
-            border-radius: 20px;
-            font-size: 20px;
-            font-weight: bold;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            animation: resultAppear 0.5s ease-out;
-            z-index: 2000;
-            border: 3px solid #ff6b6b;
-        `;
-        resultBox.textContent = resultText;
-        document.body.appendChild(resultBox);
-        
-        setTimeout(() => {
-            if (resultBox.parentNode) {
-                resultBox.style.animation = 'resultDisappear 0.5s ease-in forwards';
-                setTimeout(() => {
-                    if (resultBox.parentNode) {
-                        resultBox.parentNode.removeChild(resultBox);
-                    }
-                }, 500);
-            }
-        }, 2000);
-    }
-    
     // Функция создания персонажей
     function createCharacters() {
         const characters = [
@@ -12562,7 +11757,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 opacity: 0;
             }
         }
-        
         @keyframes realityBend {
             0%, 100% { 
                 transform: skewX(0deg) skewY(0deg);
@@ -13356,7 +12550,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 opacity: 0;
             }
         }
-        
         @keyframes universeCollapse {
             0% { 
                 transform: translate(-50%, -50%) scale(1);
